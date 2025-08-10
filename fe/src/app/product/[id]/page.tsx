@@ -113,7 +113,7 @@ export default function Page({
 
   logger.debug('Product page status check', { 
     productStatus: apiProduct.status,
-    productId: params.id,
+    productId: id,
     availableStatuses: Object.keys(STATUS_AUCTIONS)
   });
 

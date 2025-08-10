@@ -134,7 +134,7 @@ export default function ProductCTA({
       return;
     }
 
-    logger.info('User placing bid', { userId: user.id, productId, bidAmount: bidPrice });
+    logger.info('User placing bid', { userId: user._id, productId, bidInput });
 
     const bidAmount = parseInt(bidInput);
     if (!bidAmount || bidAmount <= currentPrice) {
@@ -152,7 +152,7 @@ export default function ProductCTA({
           if (refetchProduct) refetchProduct();
         })
         .catch((error) => {
-          logger.error('Bid placement failed', error, { userId: user.id, productId, bidAmount: bidPrice });
+          logger.error('Bid placement failed', error, { userId: user._id, productId, bidAmount });
           setBidError("Đặt giá thất bại. Vui lòng thử lại.");
           toast.error("Đặt giá thất bại. Vui lòng thử lại.");
         });

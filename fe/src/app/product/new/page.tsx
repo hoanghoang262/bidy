@@ -97,9 +97,9 @@ export default function NewProductPage() {
     } catch (error: unknown) {
       const apiError = error as ApiError;
       logger.error('Auction creation failed', apiError, {
-        productName: data.name,
-        category: data.category,
-        price: data.price,
+        productName: form.name,
+        category: form.category,
+        price: form.price,
         errorStatus: apiError?.response?.status,
         errorData: apiError?.response?.data
       });

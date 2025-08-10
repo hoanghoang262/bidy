@@ -12,7 +12,7 @@ export enum LogLevel {
 }
 
 interface LogMeta {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface LogEntry {
@@ -61,7 +61,7 @@ class FrontendLogger {
     return process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true' || process.env.NODE_ENV === 'development';
   }
 
-  private formatMessage(level: string, message: string, meta: LogMeta = {}): string {
+  private formatMessage(level: string, message: string): string {
     const timestamp = new Date().toISOString();
     
     if (process.env.NODE_ENV === 'production') {
@@ -69,14 +69,6 @@ class FrontendLogger {
     }
 
     // Development format with better visibility
-    const colors = {
-      ERROR: 'color: #ff4444; font-weight: bold;',
-      WARN: 'color: #ffaa00; font-weight: bold;',
-      INFO: 'color: #0088ff; font-weight: bold;',
-      DEBUG: 'color: #888888;'
-    };
-
-    const style = colors[level as keyof typeof colors] || '';
     return `%c[${level}]%c ${message}`;
   }
 
@@ -128,7 +120,7 @@ class FrontendLogger {
         const user = JSON.parse(userCookie);
         return user.id || user._id;
       }
-    } catch (error) {
+    } catch {
       // Ignore parsing errors
     }
     return undefined;
@@ -140,7 +132,7 @@ class FrontendLogger {
     try {
       const stored = localStorage.getItem('app_logs');
       return stored ? JSON.parse(stored) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -159,7 +151,7 @@ class FrontendLogger {
       if (recentLogs.length < logs.length) {
         localStorage.setItem('app_logs', JSON.stringify(recentLogs));
       }
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
   }
@@ -170,7 +162,7 @@ class FrontendLogger {
       return; // Skip if log level is below current threshold
     }
 
-    const formattedMessage = this.formatMessage(level, message, meta);
+    const formattedMessage = this.formatMessage(level, message);
     const consoleMethod = this.getConsoleMethod(level);
 
     // Console output
@@ -193,11 +185,11 @@ class FrontendLogger {
   }
 
   // Public methods
-  error(message: string, error?: Error | any, meta: LogMeta = {}) {
+  error(message: string, error?: Error | unknown, meta: LogMeta = {}) {
     const errorMeta: LogMeta = error ? {
-      error: error.message || error,
-      stack: error.stack,
-      name: error.name,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
       ...meta
     } : meta;
 

@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { 
-  AlertCircle,
-  Loader2
+  AlertCircle
 } from "lucide-react";
 import {
   LaboratoryIcon,
@@ -342,7 +341,7 @@ export default function Categories() {
           {error && <ErrorState onRetry={handleRetry} />}
 
           {/* Categories */}
-          {!isLoading && !error && uiCategories.map((category, index) => (
+          {!isLoading && !error && uiCategories.map((category) => (
             <Link
               key={category.id}
               href={category.href}

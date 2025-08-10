@@ -18,13 +18,6 @@ export const metadata: Metadata = {
   description: "Đấu Giá Online",
 };
 
-function HeaderFallback() {
-  return (
-    <header className="w-full h-16 bg-background flex items-center justify-center">
-      <div className="text-foreground">Đang tải...</div>
-    </header>
-  );
-}
 
 export default function RootLayout({
   children,

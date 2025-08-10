@@ -7,7 +7,8 @@ import { useRouter, useParams } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes.constants";
 import { useProductSearch, useProductsByStatus } from "@/services/product";
 import { useAuctionByCategory, useAuctionCategories } from "@/services/bid";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { Category, Auction } from "@/types/category.types";
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -26,7 +27,7 @@ function CategoryDetailContent() {
 
   // Fetch categories to get category name
   const { categories } = useAuctionCategories();
-  const currentCategory = categories?.find((cat: any) => cat._id === categoryId);
+  const currentCategory = categories?.find((cat: Category) => cat._id === categoryId);
 
   // Debounce the search input
   const debouncedSearch = useDebouncedValue(filterState.search, 400);
@@ -53,16 +54,18 @@ function CategoryDetailContent() {
 
   // Apply category filters if any selected (for sub-filtering within the main category)
   if (products && filterState.selectedCategories.length > 0) {
-    products = products.filter((product: any) => 
-      filterState.selectedCategories.includes(product.category?._id || product.category)
+    products = products.filter((product: Auction) => 
+      filterState.selectedCategories.includes(
+        typeof product.category === 'object' ? product.category._id : product.category
+      )
     );
   }
 
   // Apply brand filters
   if (products && filterState.selectedBrands.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedBrands.some(brand => 
-        product.name?.toLowerCase().includes(brand.toLowerCase()) ||
+        product.title?.toLowerCase().includes(brand.toLowerCase()) ||
         product.description?.toLowerCase().includes(brand.toLowerCase())
       )
     );
@@ -70,9 +73,8 @@ function CategoryDetailContent() {
 
   // Apply condition filters
   if (products && filterState.selectedConditions.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedConditions.some(condition =>
-        product.condition?.includes(condition) ||
         product.description?.toLowerCase().includes(condition.toLowerCase())
       )
     );
@@ -81,15 +83,15 @@ function CategoryDetailContent() {
   // Apply price range filters
   if (products && filterState.priceFrom) {
     const minPrice = parseFloat(filterState.priceFrom);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) >= minPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) >= minPrice
     );
   }
 
   if (products && filterState.priceTo) {
     const maxPrice = parseFloat(filterState.priceTo);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) <= maxPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) <= maxPrice
     );
   }
 
@@ -101,7 +103,7 @@ function CategoryDetailContent() {
         selectedCategories: [categoryId],
       });
     }
-  }, [categoryId]);
+  }, [categoryId, filterState, setFilterState]);
 
   return (
     <main className="flex-1 w-full px-4 py-8 pb-60 lg:px-24 flex flex-col gap-4 bg-gradient-to-b from-card to-accent-foreground">

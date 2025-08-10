@@ -38,7 +38,7 @@ export default function PaymentPage() {
     e.preventDefault();
     setPaymentStatus("loading");
     logger.info('Payment process initiated', { 
-      userId: user?.id, 
+      userId: user?._id, 
       productId, 
       amount 
     });
