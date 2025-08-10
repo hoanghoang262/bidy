@@ -1,0 +1,58 @@
+
+> fe@0.1.0 predev
+> npm run validate-env
+
+
+> fe@0.1.0 validate-env
+> node scripts/validate-env.js
+
+🔍 Bidy Frontend - Environment Validation Tool
+
+📁 Environment Files:
+   ✅ .env.local
+   ❌ .env
+   ✅ .env.example
+
+[dotenv@17.2.1] injecting env (15) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+🔍 Required Variables:
+   ✅ NEXT_PUBLIC_API_URL: http://localhost:8000
+
+💡 Recommended Variables:
+   ✅ NEXT_PUBLIC_WS_URL: ws://localhost:8000
+   ✅ NEXT_PUBLIC_APP_URL: http://localhost:3001
+   ✅ NEXT_PUBLIC_MAX_IMAGE_SIZE: 10485760
+   ✅ NEXT_PUBLIC_DEFAULT_PAGE_SIZE: 12
+
+⚙️  Optional Variables:
+   ✅ NEXT_PUBLIC_ENABLE_CHAT: true (Enable chat feature)
+   ✅ NEXT_PUBLIC_ENABLE_NOTIFICATIONS: true (Enable notifications)
+   ✅ NEXT_PUBLIC_ENABLE_DARK_MODE: true (Enable dark mode toggle)
+   ✅ NEXT_PUBLIC_SHOW_DEV_TOOLS: true (Show development tools)
+   ✅ NEXT_PUBLIC_ENABLE_DEBUG: true (Enable debug logging)
+
+🌐 URL Validation:
+   ✅ NEXT_PUBLIC_API_URL: Valid URL format
+   ✅ NEXT_PUBLIC_WS_URL: Valid URL format
+   ✅ NEXT_PUBLIC_APP_URL: Valid URL format
+
+🔢 Numeric Validation:
+   ✅ NEXT_PUBLIC_MAX_IMAGE_SIZE: 10485760
+   ✅ NEXT_PUBLIC_DEFAULT_PAGE_SIZE: 12
+
+📊 Validation Summary:
+   ✅ All validations passed - environment is properly configured!
+
+> fe@0.1.0 dev
+> next dev --turbopack -p 3001
+
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3001
+    at <unknown> (Error: listen EADDRINUSE: address already in use :::3001)
+    at new Promise (<anonymous>) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+[?25h

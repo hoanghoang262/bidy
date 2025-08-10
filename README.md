@@ -40,8 +40,56 @@ bidy/
    cd be
    npm install
    cp .env.example .env  # Configure your environment
-   npm start            # Starts on localhost:8000
+   npm start            # Starts on localhost:8001
    ```
+
+## 🌐 Production Deployment
+
+### Same VPC Setup (Recommended)
+
+Both frontend and backend should run in the same VPC for optimal performance and security:
+
+**Frontend (Port 3001)**:
+```bash
+cd fe
+npm run build
+npm start                # Production server on port 3001
+```
+
+**Backend (Port 8001)**:
+```bash
+cd be
+npm start                # API server on port 8001
+```
+
+**Domain Routing**:
+- **Frontend**: `https://bidy.vn` → `localhost:3001`
+- **Backend API**: `https://api.bidy.vn` → `localhost:8001`
+
+**Nginx Configuration Example**:
+```nginx
+# Frontend (bidy.vn)
+server {
+    listen 80;
+    server_name bidy.vn www.bidy.vn;
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+# Backend API (api.bidy.vn)
+server {
+    listen 80;
+    server_name api.bidy.vn;
+    location / {
+        proxy_pass http://localhost:8001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
 
 ## 🛠️ Tech Stack
 
@@ -95,18 +143,32 @@ bidy/
 
 ## 📝 Environment Configuration
 
-### Frontend (.env.local)
+### Frontend (.env)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_SOCKET_URL=http://localhost:8000
+# Development
+NEXT_PUBLIC_API_URL=http://localhost:8001
+NEXT_PUBLIC_WS_URL=ws://localhost:8001
+NEXT_PUBLIC_APP_URL=http://localhost:3001
+
+# Production 
+NEXT_PUBLIC_API_URL=https://api.bidy.vn
+NEXT_PUBLIC_WS_URL=wss://api.bidy.vn
+NEXT_PUBLIC_APP_URL=https://bidy.vn
 ```
 
 ### Backend (.env)
 ```env
 NODE_ENV=development
-PORT=8000
+PORT=8001
 MONGODB_URI=mongodb://localhost:27017/bidy_auction
 JWT_SECRET=your_jwt_secret_key_minimum_32_characters
+
+# Client URLs for CORS
+CLIENT_URL=http://localhost:3001
+CLIENT_URL_PROD=https://bidy.vn
+CLIENT_URL_PROD_WWW=https://www.bidy.vn
+
+# AWS Configuration (Optional)
 AWS_ACCESS_KEY_ID=your_aws_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret  
 AWS_S3_BUCKET=your_bucket_name
