@@ -1,2 +1,9 @@
 # Dependencies only
 node_modules/
+
+# Build artifacts
+fe/build_output.txt
+fe/.next
+
+# Large files
+be/uploads
