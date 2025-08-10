@@ -30,7 +30,7 @@ const getPaginationMeta = (totalCount, pageNumber, limitNumber) => {
     totalPages,
     currentPage: totalPages ? pageNumber : 0,
     hasNext: pageNumber < totalPages,
-    hasPrev: pageNumber > 1
+    hasPrev: pageNumber > 1,
   };
 };
 
@@ -53,19 +53,19 @@ const getFilteredPaginatedData = async ({
     data: 'data',
     total: 'total',
     totalPages: 'totalPages',
-    currentPage: 'currentPage'
-  }
+    currentPage: 'currentPage',
+  },
 }) => {
   // Build final filter with search functionality
   let finalFilter = { ...filter };
-  
+
   if (searchTerm && searchFields.length > 0) {
     const searchConditions = searchFields.map(field => ({
-      [field]: { $regex: searchTerm, $options: searchOptions }
+      [field]: { $regex: searchTerm, $options: searchOptions },
     }));
     finalFilter = {
       ...finalFilter,
-      $or: searchConditions
+      $or: searchConditions,
     };
   }
 
@@ -79,7 +79,7 @@ const getFilteredPaginatedData = async ({
       .limit(limitNumber)
       .populate(populate)
       .lean(lean),
-    model.countDocuments(finalFilter)
+    model.countDocuments(finalFilter),
   ]);
 
   const totalPages = Math.ceil(totalCount / limitNumber);
@@ -95,5 +95,5 @@ const getFilteredPaginatedData = async ({
 module.exports = {
   getPagination,
   getPaginationMeta,
-  getFilteredPaginatedData
+  getFilteredPaginatedData,
 };

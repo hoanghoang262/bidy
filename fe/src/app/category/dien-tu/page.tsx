@@ -8,6 +8,7 @@ import { APP_ROUTES } from "@/constants/routes.constants";
 import { useProductSearch, useProductsByStatus } from "@/services/product";
 import { useAuctionCategories } from "@/services/bid";
 import { ArrowLeft, Smartphone } from "lucide-react";
+import type { Category, Auction } from "@/types/category.types";
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -24,7 +25,7 @@ function ElectronicsCategoryContent() {
 
   // Fetch categories to find electronics category
   const { categories } = useAuctionCategories();
-  const electronicsCategory = categories?.find((cat: any) => 
+  const electronicsCategory = categories?.find((cat: Category) => 
     cat.name.toLowerCase().includes("điện tử") ||
     cat.name.toLowerCase().includes("điện thoại") ||
     cat.name.toLowerCase().includes("máy tính") ||
@@ -50,10 +51,10 @@ function ElectronicsCategoryContent() {
 
   // Filter for electronics-related products
   if (products) {
-    products = products.filter((product: any) => {
-      const productName = product.name?.toLowerCase() || "";
+    products = products.filter((product: Auction) => {
+      const productName = product.title?.toLowerCase() || "";
       const productDesc = product.description?.toLowerCase() || "";
-      const categoryName = product.category?.name?.toLowerCase() || "";
+      const categoryName = typeof product.category === 'object' ? product.category.name?.toLowerCase() : "";
       
       // Check if product is electronics-related
       const isElectronics = 
@@ -82,8 +83,7 @@ function ElectronicsCategoryContent() {
       
       // Also check if electronics category is selected
       const categoryMatch = electronicsCategory && 
-        (product.category?._id === electronicsCategory._id || 
-         product.category === electronicsCategory._id);
+        (typeof product.category === 'object' ? product.category._id === electronicsCategory._id : product.category === electronicsCategory._id);
       
       return isElectronics || categoryMatch;
     });
@@ -91,16 +91,16 @@ function ElectronicsCategoryContent() {
 
   // Apply additional filters
   if (products && filterState.selectedCategories.length > 0) {
-    products = products.filter((product: any) => 
-      filterState.selectedCategories.includes(product.category?._id || product.category)
+    products = products.filter((product: Auction) => 
+      filterState.selectedCategories.includes(typeof product.category === 'object' ? product.category._id : product.category)
     );
   }
 
   // Apply brand filters
   if (products && filterState.selectedBrands.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedBrands.some(brand => 
-        product.name?.toLowerCase().includes(brand.toLowerCase()) ||
+        product.title?.toLowerCase().includes(brand.toLowerCase()) ||
         product.description?.toLowerCase().includes(brand.toLowerCase())
       )
     );
@@ -108,9 +108,8 @@ function ElectronicsCategoryContent() {
 
   // Apply condition filters
   if (products && filterState.selectedConditions.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedConditions.some(condition =>
-        product.condition?.includes(condition) ||
         product.description?.toLowerCase().includes(condition.toLowerCase())
       )
     );
@@ -119,15 +118,15 @@ function ElectronicsCategoryContent() {
   // Apply price range filters
   if (products && filterState.priceFrom) {
     const minPrice = parseFloat(filterState.priceFrom);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) >= minPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) >= minPrice
     );
   }
 
   if (products && filterState.priceTo) {
     const maxPrice = parseFloat(filterState.priceTo);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) <= maxPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) <= maxPrice
     );
   }
 
@@ -139,7 +138,7 @@ function ElectronicsCategoryContent() {
         selectedCategories: [electronicsCategory._id],
       });
     }
-  }, [electronicsCategory?._id]);
+  }, [electronicsCategory, filterState, setFilterState]);
 
   return (
     <main className="flex-1 w-full px-4 py-8 pb-60 lg:px-24 flex flex-col gap-4 bg-gradient-to-b from-card to-accent-foreground">

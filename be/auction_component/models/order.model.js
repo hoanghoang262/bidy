@@ -1,15 +1,15 @@
-const { model, models, Schema } = require("mongoose");
+const { model, models, Schema } = require('mongoose');
 
 const orderSchema = new Schema(
 	{
 		user_id: {
 			type: Schema.Types.ObjectId,
-			ref: "User",
+			ref: 'User',
 			required: true,
 		},
 		bid_id: {
 			type: Schema.Types.ObjectId,
-			ref: "Bid",
+			ref: 'Bid',
 			required: true,
 		},
 		price: {
@@ -22,8 +22,8 @@ const orderSchema = new Schema(
 	},
 	{
 		timestamps: true,
-	}
+	},
 );
 
-const Order = models.Order || model("Order", orderSchema);
+const Order = models.Order || model('Order', orderSchema);
 module.exports = Order;

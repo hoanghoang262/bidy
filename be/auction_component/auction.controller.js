@@ -1,13 +1,13 @@
-const auctionService = require("./auction.service");
-const { response } = require("../util/response");
-const { transValidation, responseStatus, errorCode } = require("../langs/vn");
-const Order = require("./models/order.model");
-const Cart = require("./models/cart.model");
-const Auction = require("./models/bid.model");
-const nodemailer = require("nodemailer");
-const { startCronJob } = require("../cronJob");
-const logger = require("../util/logger");
-const mongoose = require("mongoose");
+const auctionService = require('./auction.service');
+const { response } = require('../util/response');
+const { transValidation, responseStatus, errorCode } = require('../langs/vn');
+const Order = require('./models/order.model');
+const _Cart = require('./models/cart.model');
+const Auction = require('./models/bid.model');
+const _nodemailer = require('nodemailer');
+const { startCronJob } = require('../cronJob');
+const logger = require('../util/logger');
+const mongoose = require('mongoose');
 
 const getAllCategory = async (req, res) => {
   try {
@@ -20,7 +20,7 @@ const getAllCategory = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data)
+        response(responseStatus.success, transValidation.input_correct, data),
       );
   } catch (error) {
     logger.error('Error in getAllCategory', error, { function: 'getAllCategory' });
@@ -39,7 +39,7 @@ const getAuctionByStatus = async (req, res) => {
     const data = await auctionService.getProductByStatus(
       status,
       pageNumber,
-      limitNumber
+      limitNumber,
     );
 
     if (!data) {
@@ -51,7 +51,7 @@ const getAuctionByStatus = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data)
+        response(responseStatus.success, transValidation.input_correct, data),
       );
   } catch (error) {
     return res
@@ -70,7 +70,7 @@ const getUserAuctionByStatus = async (req, res) => {
       id,
       status,
       pageNumber,
-      limitNumber
+      limitNumber,
     );
 
     if (!data) {
@@ -82,7 +82,7 @@ const getUserAuctionByStatus = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data)
+        response(responseStatus.success, transValidation.input_correct, data),
       );
   } catch (error) {
     return res
@@ -99,7 +99,7 @@ const getAuctionUserBought = async (req, res) => {
   const data = await auctionService.getAuctionUserBought(
     id,
     pageNumber,
-    limitNumber
+    limitNumber,
   );
 
   if (!data) {
@@ -110,7 +110,7 @@ const getAuctionUserBought = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 const getAuctionUserSold = async (req, res) => {
@@ -121,7 +121,7 @@ const getAuctionUserSold = async (req, res) => {
   const data = await auctionService.getAuctionUserSold(
     id,
     pageNumber,
-    limitNumber
+    limitNumber,
   );
 
   if (!data) {
@@ -132,11 +132,11 @@ const getAuctionUserSold = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
-const getAuctionUserBidding = async (req, res) => {
+const _getAuctionUserBidding = async (req, res) => {
   const { id } = req.params;
   const { page, limit } = req.query;
   const pageNumber = +page || +process.env.PAGE_NUMBER;
@@ -144,7 +144,7 @@ const getAuctionUserBidding = async (req, res) => {
   const data = await auctionService.getAuctionUserBidding(
     id,
     pageNumber,
-    limitNumber
+    limitNumber,
   );
 
   if (!data) {
@@ -155,7 +155,7 @@ const getAuctionUserBidding = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -174,7 +174,7 @@ const getAuctionEnd = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -187,12 +187,12 @@ const getProductByCategory = async (req, res) => {
   const data = await auctionService.getProductByCategory(
     category,
     pageNumber,
-    limitNumber
+    limitNumber,
   );
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -204,12 +204,12 @@ const getProductBySearch = async (req, res) => {
   const data = await auctionService.getProductBySearch(
     keyword,
     pageNumber,
-    limitNumber
+    limitNumber,
   );
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -220,7 +220,7 @@ const getProductById = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(400)
-      .json(response(responseStatus.fail, "Invalid auction ID format"));
+      .json(response(responseStatus.fail, 'Invalid auction ID format'));
   }
 
   const data = await auctionService.getProductById(id);
@@ -229,11 +229,11 @@ const getProductById = async (req, res) => {
       .status(404)
       .json(response(responseStatus.fail, transValidation.not_found));
   }
-  
+
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 const updateProduct = async (req, res) => {
@@ -253,7 +253,7 @@ const updateProduct = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -271,7 +271,7 @@ const auctionBid = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, status)
+      response(responseStatus.success, transValidation.input_correct, status),
     );
 };
 
@@ -286,7 +286,7 @@ const buyNow = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, status)
+      response(responseStatus.success, transValidation.input_correct, status),
     );
 };
 
@@ -303,7 +303,7 @@ const autoBid = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, status)
+      response(responseStatus.success, transValidation.input_correct, status),
     );
 };
 
@@ -317,14 +317,14 @@ const deleteMyAuction = async (req, res) => {
         response(
           responseStatus.fail,
           transValidation.bad_request,
-          errorCode.bad_request
-        )
+          errorCode.bad_request,
+        ),
       );
   }
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, status)
+      response(responseStatus.success, transValidation.input_correct, status),
     );
 };
 
@@ -339,7 +339,7 @@ const viewCart = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, status)
+        response(responseStatus.success, transValidation.input_correct, status),
       );
   } catch (error) {
     logger.error('Error in viewCart controller', error, { userId: req.idUser });
@@ -356,7 +356,7 @@ const activeAutoBid = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, status)
+        response(responseStatus.success, transValidation.input_correct, status),
       );
   } catch (error) {
     logger.error('Error in activeAutoBid controller', error);
@@ -368,12 +368,12 @@ const activeAutoBid = async (req, res) => {
 
 const listingAuction = async (req, res) => {
   try {
-    logger.info('Creating new auction listing', { 
-      userId: req.idUser, 
+    logger.info('Creating new auction listing', {
+      userId: req.idUser,
       productName: req.body.name,
-      fileCount: req.files ? req.files.length : 0
+      fileCount: req.files ? req.files.length : 0,
     });
-    
+
     const files = req.files;
     if (!files || files.length === 0) {
       logger.warn('No files uploaded for auction listing', { userId: req.idUser });
@@ -382,9 +382,9 @@ const listingAuction = async (req, res) => {
         .json(
           response(
             responseStatus.fail,
-            "No image files uploaded",
-            errorCode.bad_request
-          )
+            'No image files uploaded',
+            errorCode.bad_request,
+          ),
         );
     }
 
@@ -398,7 +398,7 @@ const listingAuction = async (req, res) => {
       description: req.body.description,
       image: files,
       finishedTime: new Date(
-        Date.now() + req.body.time_remain * 24 * 60 * 60 * 1000
+        Date.now() + req.body.time_remain * 24 * 60 * 60 * 1000,
       ),
       // o tren la theo ngay, con theo giay * 10
       // finishedTime: new Date(Date.now() + req.body.time_remain * 10 * 1000),
@@ -409,19 +409,19 @@ const listingAuction = async (req, res) => {
     const createdAuction = await auctionService.listingAuction(product, req.idUser);
     if (!createdAuction) {
       logger.error('Auction creation failed in service', null, { userId: req.idUser, productName: product.name });
-      return res.status(400).json(response(responseStatus.fail, "Failed to create auction"));
+      return res.status(400).json(response(responseStatus.fail, 'Failed to create auction'));
     }
-    
+
     logger.info('Auction created successfully', { auctionId: createdAuction._id, userId: req.idUser, productName: product.name });
     return res
       .status(201)
       .json(
-        response(responseStatus.success, transValidation.input_correct, createdAuction)
+        response(responseStatus.success, transValidation.input_correct, createdAuction),
       );
   } catch (error) {
     logger.error('Error in listingAuction controller', error, { userId: req.idUser, productName: req.body.name });
     return res.status(500).json(
-      response(responseStatus.fail, `Server error: ${error.message}`)
+      response(responseStatus.fail, `Server error: ${error.message}`),
     );
   }
 };
@@ -445,8 +445,8 @@ const getUploadURL = async (req, res) => {
         response(
           responseStatus.fail,
           transValidation.bad_request,
-          errorCode.bad_request
-        )
+          errorCode.bad_request,
+        ),
       );
   }
 
@@ -455,7 +455,7 @@ const getUploadURL = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, uploadURL)
+      response(responseStatus.success, transValidation.input_correct, uploadURL),
     );
 };
 
@@ -465,7 +465,7 @@ const createOrder = async (req, res) => {
   try {
     // Only allow the winner to create the order
     const auction = await Auction.findById(bid_id).populate('top_ownerships.user_id');
-    if (!auction) return res.status(404).json({ success: false, message: "Auction not found" });
+    if (!auction) return res.status(404).json({ success: false, message: 'Auction not found' });
 
     // Find the highest bid
     const topBid = auction.top_ownerships.sort((a, b) => b.amount - a.amount)[0];
@@ -474,7 +474,7 @@ const createOrder = async (req, res) => {
       : topBid.user_id.toString();
 
     if (!topBid || winnerId !== req.idUser.toString()) {
-      return res.status(403).json({ success: false, message: "Only the winner can create the order" });
+      return res.status(403).json({ success: false, message: 'Only the winner can create the order' });
     }
 
     // Create the order
@@ -500,12 +500,12 @@ const getOrder = async (req, res) => {
 
   try {
     const orders = await Order.find({ user_id: req.idUser })
-      .populate("bid_id")
+      .populate('bid_id')
       .limit(limitNumber)
       .skip((pageNumber - 1) * limitNumber);
     const { totalOrder, totalPages } = await auctionService.getTotalOrder(
       req.idUser,
-      limitNumber
+      limitNumber,
     );
     const result = {
       orders,
@@ -517,7 +517,7 @@ const getOrder = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (error) {
     return res
@@ -526,8 +526,8 @@ const getOrder = async (req, res) => {
         response(
           responseStatus.fail,
           transValidation.bad_request,
-          errorCode.bad_request
-        )
+          errorCode.bad_request,
+        ),
       );
   }
 };
@@ -543,7 +543,7 @@ const getMyAuction = async (req, res) => {
       .skip((pageNumber - 1) * limitNumber);
     const { totalAuction, totalPages } = await auctionService.getTotalAuction(
       req.idUser,
-      limitNumber
+      limitNumber,
     );
     const result = {
       auction,
@@ -555,7 +555,7 @@ const getMyAuction = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (error) {
     return res
@@ -564,8 +564,8 @@ const getMyAuction = async (req, res) => {
         response(
           responseStatus.fail,
           transValidation.bad_request,
-          errorCode.bad_request
-        )
+          errorCode.bad_request,
+        ),
       );
   }
 };
@@ -585,13 +585,13 @@ const eventCheckout = async (req, res) => {
 const checkUserOrder = async (req, res) => {
   const { bid_id } = req.params;
   try {
-    const order = await Order.findOne({ 
-      user_id: req.idUser, 
-      bid_id: bid_id 
+    const order = await Order.findOne({
+      user_id: req.idUser,
+      bid_id: bid_id,
     });
-    return res.status(200).json({ 
-      hasOrder: !!order, 
-      order: order 
+    return res.status(200).json({
+      hasOrder: !!order,
+      order: order,
     });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });

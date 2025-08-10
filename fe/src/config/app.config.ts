@@ -108,7 +108,14 @@ export const validateEnvironment = () => {
     const value = process.env[envVar];
     if (!value) {
       if (appConfig.dev.isProduction) {
-        validationErrors.push(`Missing required environment variable: ${envVar}`);
+        // Only error if we're in a real production deployment (not localhost)
+        const isRealProduction = !appConfig.api.baseUrl.includes('localhost') && 
+                                !appConfig.app.url.includes('localhost');
+        if (isRealProduction) {
+          validationErrors.push(`Missing required environment variable: ${envVar}`);
+        } else {
+          validationWarnings.push(`Missing ${envVar} (using default for local production build)`);
+        }
       } else {
         validationWarnings.push(`Missing ${envVar} (using default)`);
       }
@@ -120,7 +127,15 @@ export const validateEnvironment = () => {
   urlVars.forEach(envVar => {
     const value = process.env[envVar];
     if (value && !isValidUrl(value)) {
-      validationErrors.push(`Invalid URL format for ${envVar}: ${value}`);
+      // Only error for invalid URLs in real production, warn in development-like environments
+      const isRealProduction = appConfig.dev.isProduction && 
+                              !appConfig.api.baseUrl.includes('localhost') && 
+                              !appConfig.app.url.includes('localhost');
+      if (isRealProduction) {
+        validationErrors.push(`Invalid URL format for ${envVar}: ${value}`);
+      } else {
+        validationWarnings.push(`Invalid URL format for ${envVar}: ${value} (ignored in development)`);
+      }
     }
   });
 
@@ -167,6 +182,7 @@ export const validateEnvironment = () => {
   if (appConfig.dev.isProduction) {
     // Production-specific checks
     if (appConfig.api.baseUrl.includes('localhost')) {
+      // Only warn, don't error for localhost in production during development
       validationWarnings.push('Using localhost URL in production environment');
     }
     

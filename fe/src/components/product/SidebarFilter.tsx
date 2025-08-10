@@ -39,6 +39,7 @@ interface Category {
 
 const FilterContent = React.memo(function FilterContent({
   filterState,
+  setFilterState,
   handleCategoryTypeChange,
   handleCheckbox,
   updateFilter,
@@ -240,7 +241,6 @@ const FilterContent = React.memo(function FilterContent({
           <button
             className="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium"
             onClick={() => {
-              // @ts-expect-error - TypeScript issue with destructured prop
               setFilterState({
                 ...filterState,
                 selectedCategories: [],

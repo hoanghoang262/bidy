@@ -32,7 +32,7 @@ bidy/
    ```bash
    cd fe
    npm install
-   npm run dev          # Starts on localhost:3000
+   npm run dev          # Starts on localhost:3001
    ```
 
 3. **Backend Setup**
@@ -40,7 +40,7 @@ bidy/
    cd be
    npm install
    cp .env.example .env  # Configure your environment
-   npm start            # Starts on localhost:8001
+   npm start            # Starts on localhost:8000
    ```
 
 ## 🛠️ Tech Stack
@@ -97,14 +97,14 @@ bidy/
 
 ### Frontend (.env.local)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8001
-NEXT_PUBLIC_SOCKET_URL=http://localhost:8001
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_SOCKET_URL=http://localhost:8000
 ```
 
 ### Backend (.env)
 ```env
 NODE_ENV=development
-PORT=8001
+PORT=8000
 MONGODB_URI=mongodb://localhost:27017/bidy_auction
 JWT_SECRET=your_jwt_secret_key_minimum_32_characters
 AWS_ACCESS_KEY_ID=your_aws_key

@@ -154,18 +154,7 @@ function SignInContent() {
   );
 }
 
-function SignInFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-background rounded-lg shadow-lg p-8">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-red-600 mb-2">ĐĂNG NHẬP</h1>
-          <p className="text-gray-600">Đang tải...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Removed unused SignInFallback component
 
 export default function SignInPage() {
   return <SignInContent />;

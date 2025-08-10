@@ -1,4 +1,4 @@
-const { model, models, Schema } = require("mongoose");
+const { model, models, Schema } = require('mongoose');
 
 const userSchema = new Schema(
   {
@@ -8,7 +8,7 @@ const userSchema = new Schema(
     role: {
       type: String,
       required: true,
-      default: "user",
+      default: 'user',
     },
     avatar: {
       type: String,
@@ -36,7 +36,7 @@ const userSchema = new Schema(
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Performance optimization: Add database indexes for authentication and user queries
@@ -48,5 +48,5 @@ userSchema.index({ passwordResetToken: 1 }); // For password reset functionality
 userSchema.index({ status: 1 }); // For active/inactive user queries
 userSchema.index({ role: 1 }); // For admin/user role queries
 
-const User = models.User || model("User", userSchema);
+const User = models.User || model('User', userSchema);
 module.exports = User;

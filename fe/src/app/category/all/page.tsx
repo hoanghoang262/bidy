@@ -9,6 +9,7 @@ import { useProductSearch, useProductsByStatus } from "@/services/product";
 import { useAuctionByStatus } from "@/services/bid";
 import { ArrowLeft } from "lucide-react";
 import { STATUS_AUCTIONS } from "@/constants/app.enum";
+import type { Auction } from "@/types/category.types";
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -49,16 +50,17 @@ function AllCategoriesContent() {
 
   // Apply category filters
   if (products && filterState.selectedCategories.length > 0) {
-    products = products.filter((product: any) => 
-      filterState.selectedCategories.includes(product.category?._id || product.category)
-    );
+    products = products.filter((product: Auction) => {
+      const categoryId = typeof product.category === 'object' ? product.category._id : product.category;
+      return filterState.selectedCategories.includes(categoryId);
+    });
   }
 
   // Apply brand filters
   if (products && filterState.selectedBrands.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedBrands.some(brand => 
-        product.name?.toLowerCase().includes(brand.toLowerCase()) ||
+        product.title?.toLowerCase().includes(brand.toLowerCase()) ||
         product.description?.toLowerCase().includes(brand.toLowerCase())
       )
     );
@@ -66,9 +68,8 @@ function AllCategoriesContent() {
 
   // Apply condition filters
   if (products && filterState.selectedConditions.length > 0) {
-    products = products.filter((product: any) => 
+    products = products.filter((product: Auction) => 
       filterState.selectedConditions.some(condition =>
-        product.condition?.includes(condition) ||
         product.description?.toLowerCase().includes(condition.toLowerCase())
       )
     );
@@ -77,15 +78,15 @@ function AllCategoriesContent() {
   // Apply price range filters
   if (products && filterState.priceFrom) {
     const minPrice = parseFloat(filterState.priceFrom);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) >= minPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) >= minPrice
     );
   }
 
   if (products && filterState.priceTo) {
     const maxPrice = parseFloat(filterState.priceTo);
-    products = products.filter((product: any) => 
-      (product.currentPrice || product.price || 0) <= maxPrice
+    products = products.filter((product: Auction) => 
+      (product.currentBid || product.startPrice || 0) <= maxPrice
     );
   }
 

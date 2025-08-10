@@ -119,7 +119,7 @@ function ProfilePageContent() {
     });
 
     return sorted;
-  }, [tab, soldProducts, boughtProducts, sortBy, sortOrder]);
+  }, [tab, productTab, soldProducts, boughtProducts, sortBy, sortOrder]);
 
   const handleSort = (option: SortOption) => {
     if (sortBy === option) {

@@ -1,13 +1,13 @@
 // Assuming you have required mongoose
-const mongoose = require("mongoose");
-require("dotenv").config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 // MongoDB connection string from environment variable
-const connectionString = process.env.MONGODB_URI || "mongodb+srv://admin:admin@cluster0.dr5fib0.mongodb.net/auction";
+const connectionString = process.env.MONGODB_URI || 'mongodb+srv://admin:admin@cluster0.dr5fib0.mongodb.net/auction';
 
 // Validate MongoDB URI is configured
 if (!process.env.MONGODB_URI) {
-  console.warn("⚠️  MONGODB_URI not found in environment variables, using default MongoDB Atlas cluster");
+  console.warn('⚠️  MONGODB_URI not found in environment variables, using default MongoDB Atlas cluster');
 }
 
 // Connect to MongoDB with optimized connection pooling
@@ -21,24 +21,24 @@ mongoose.connect(connectionString, {
   bufferCommands: false, // Disable mongoose buffering
   heartbeatFrequencyMS: 10000, // Send heartbeat every 10 seconds
   retryWrites: true, // Enable retry writes for better reliability
-  retryReads: true   // Enable retry reads for better reliability
+  retryReads: true,   // Enable retry reads for better reliability
 });
 
 // Event handlers for connection monitoring
-mongoose.connection.on("connected", () => {
-	console.log("🚀 Connected to MongoDB successfully");
+mongoose.connection.on('connected', () => {
+	console.log('🚀 Connected to MongoDB successfully');
 });
 
-mongoose.connection.on("error", (err) => {
-	console.error("❌ MongoDB connection error:", err.message);
+mongoose.connection.on('error', (err) => {
+	console.error('❌ MongoDB connection error:', err.message);
 });
 
-mongoose.connection.on("disconnected", () => {
-	console.warn("⚠️  MongoDB disconnected");
+mongoose.connection.on('disconnected', () => {
+	console.warn('⚠️  MongoDB disconnected');
 });
 
-mongoose.connection.on("reconnected", () => {
-	console.log("🔄 MongoDB reconnected successfully");
+mongoose.connection.on('reconnected', () => {
+	console.log('🔄 MongoDB reconnected successfully');
 });
 
 // Graceful shutdown
@@ -48,11 +48,11 @@ process.on('SIGINT', async () => {
 	process.exit(0);
 });
 
-require("../user_components/models/user.model");
+require('../user_components/models/user.model');
 
-require("../chat/models/message.model");
-require("../chat/models/conversation.model");
+require('../chat/models/message.model');
+require('../chat/models/conversation.model');
 
-require("../auction_component/models/bid.model");
-require("../auction_component/models/category.model");
-require("../auction_component/models/order.model");
+require('../auction_component/models/bid.model');
+require('../auction_component/models/category.model');
+require('../auction_component/models/order.model');

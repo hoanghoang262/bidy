@@ -1,11 +1,11 @@
-const userService = require("./user.service");
-const Wishlist = require("./models/wishlist.model");
-const User = require("./models/user.model");
-const { response } = require("../util/response");
-const { transValidation, responseStatus, errorCode } = require("../langs/vn");
-const jwt = require("jsonwebtoken");
+const userService = require('./user.service');
+const Wishlist = require('./models/wishlist.model');
+const User = require('./models/user.model');
+const { response } = require('../util/response');
+const { transValidation, responseStatus, errorCode } = require('../langs/vn');
+const jwt = require('jsonwebtoken');
 
-require("dotenv").config();
+require('dotenv').config();
 
 const loginUser = async (req, res) => {
   const { userName, password } = req.body;
@@ -19,7 +19,7 @@ const loginUser = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, result)
+      response(responseStatus.success, transValidation.input_correct, result),
     );
 };
 
@@ -37,7 +37,7 @@ const register = async (req, res) => {
     full_name,
     email,
     identity,
-    phone
+    phone,
   );
   if (!status) {
     return res
@@ -49,13 +49,13 @@ const register = async (req, res) => {
     return res
       .status(500)
       .json(
-        response(responseStatus.fail, transValidation.send_verify_link_failed)
+        response(responseStatus.fail, transValidation.send_verify_link_failed),
       );
   }
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.send_verify_link_success)
+      response(responseStatus.success, transValidation.send_verify_link_success),
     );
 };
 
@@ -70,7 +70,7 @@ const viewProfile = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, status)
+        response(responseStatus.success, transValidation.input_correct, status),
       );
   } catch (error) {
     return res
@@ -90,7 +90,7 @@ const getUserStats = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data)
+        response(responseStatus.success, transValidation.input_correct, data),
       );
   } catch (error) {
     return res
@@ -108,13 +108,13 @@ const userUpdate = async (req, res) => {
     email,
     identity,
     phone,
-    res
+    res,
   );
   if (status) {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, status)
+        response(responseStatus.success, transValidation.input_correct, status),
       );
   }
 };
@@ -128,7 +128,7 @@ const changePassword = async (req, res, next) => {
       req.idUser,
       oldPassword,
       newPassword,
-      res
+      res,
     );
 
     if (status)
@@ -138,8 +138,8 @@ const changePassword = async (req, res, next) => {
           response(
             responseStatus.success,
             transValidation.input_correct,
-            status
-          )
+            status,
+          ),
         );
   } catch (error) {
     next(error);
@@ -159,8 +159,8 @@ const forgotPassword = async (req, res, next) => {
           response(
             responseStatus.success,
             transValidation.input_correct,
-            status
-          )
+            status,
+          ),
         );
   } catch (error) {
     next(error);
@@ -180,8 +180,8 @@ const resetPassword = async (req, res, next) => {
           response(
             responseStatus.success,
             transValidation.input_correct,
-            status
-          )
+            status,
+          ),
         );
   } catch (error) {
     next(error);
@@ -198,7 +198,7 @@ const userList = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -209,14 +209,14 @@ const wishlist = async (req, res) => {
   try {
     const wishlist = await Wishlist.find({
       user_id: req.idUser,
-      status: "true",
+      status: 'true',
     })
-      .populate("auction_id")
+      .populate('auction_id')
       .exec();
 
     const { totalWishlist, totalPages } = await userService.getTotalWishlist(
       req.idUser,
-      limitNumber
+      limitNumber,
     );
     const result = {
       wishlist,
@@ -228,7 +228,7 @@ const wishlist = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (error) {
     return res
@@ -237,8 +237,8 @@ const wishlist = async (req, res) => {
         response(
           responseStatus.fail,
           transValidation.bad_request,
-          errorCode.bad_request
-        )
+          errorCode.bad_request,
+        ),
       );
   }
 };
@@ -251,7 +251,7 @@ const addWishlist = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data)
+        response(responseStatus.success, transValidation.input_correct, data),
       );
   }
 };
@@ -267,7 +267,7 @@ const removeWishlist = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
@@ -281,18 +281,18 @@ const removeAllWishlist = async (req, res) => {
   return res
     .status(200)
     .json(
-      response(responseStatus.success, transValidation.input_correct, data)
+      response(responseStatus.success, transValidation.input_correct, data),
     );
 };
 
 const checkUser = async (req, res) => {
   const { email, phone, identity, userName } = req.body;
-  
+
   // Check which field is being validated
   const result = {
     exists: false,
     field: null,
-    message: null
+    message: null,
   };
 
   if (userName) {
@@ -371,8 +371,8 @@ const verifyLink = async (req, res) => {
       .json(
         response(
           responseStatus.success,
-          transValidation.active_account_successfully
-        )
+          transValidation.active_account_successfully,
+        ),
       );
   } catch (err) {
     return res

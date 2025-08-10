@@ -1,77 +1,77 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const userController = require("./user.controller");
-const authenMiddleware = require("../Middlewares/authen.middleware");
-const { validationMiddlewares } = require("../Middlewares/validation.middleware");
-const { rateLimiters, sanitizeInput } = require("../Middlewares/security.middleware");
+const userController = require('./user.controller');
+const authenMiddleware = require('../Middlewares/authen.middleware');
+const { validationMiddlewares } = require('../Middlewares/validation.middleware');
+const { rateLimiters, sanitizeInput } = require('../Middlewares/security.middleware');
 
-router.post("/check", userController.checkUser);
-router.post("/login", 
-  rateLimiters.auth, 
-  sanitizeInput, 
-  validationMiddlewares.validateUserLogin, 
+router.post('/check', userController.checkUser);
+router.post('/login',
+  rateLimiters.auth,
+  sanitizeInput,
+  validationMiddlewares.validateUserLogin,
   userController.loginUser);
-router.post("/signup", 
-  rateLimiters.general, 
-  sanitizeInput, 
-  validationMiddlewares.validateUserRegister, 
+router.post('/signup',
+  rateLimiters.general,
+  sanitizeInput,
+  validationMiddlewares.validateUserRegister,
   userController.register);
-router.get("/profile", 
-  sanitizeInput, 
-  authenMiddleware.isAuth, 
+router.get('/profile',
+  sanitizeInput,
+  authenMiddleware.isAuth,
   userController.viewProfile);
-router.get("/stats", 
-  sanitizeInput, 
-  authenMiddleware.isAuth, 
+router.get('/stats',
+  sanitizeInput,
+  authenMiddleware.isAuth,
   userController.getUserStats);
-router.patch("/update", authenMiddleware.isAuth, userController.userUpdate);
-router.post("/forgot-password", 
-  rateLimiters.passwordReset, 
-  sanitizeInput, 
-  validationMiddlewares.validateForgotPassword, 
+router.patch('/update', authenMiddleware.isAuth, userController.userUpdate);
+router.post('/forgot-password',
+  rateLimiters.passwordReset,
+  sanitizeInput,
+  validationMiddlewares.validateForgotPassword,
   userController.forgotPassword);
-router.post("/reset-password", 
-  rateLimiters.auth, 
-  sanitizeInput, 
-  validationMiddlewares.validateResetPassword, 
+router.post('/reset-password',
+  rateLimiters.auth,
+  sanitizeInput,
+  validationMiddlewares.validateResetPassword,
   userController.resetPassword);
-router.get("/resend-verify", userController.resendVerify);
-router.get("/verify", userController.verifyLink);
+router.get('/resend-verify', userController.resendVerify);
+router.get('/verify', userController.verifyLink);
 router.put(
-  "/changePassword",
+  '/changePassword',
   rateLimiters.auth,
   sanitizeInput,
   authenMiddleware.isAuth,
   validationMiddlewares.validateChangePassword,
-  userController.changePassword
+  userController.changePassword,
 );
-router.get("/wishlist", 
-  sanitizeInput, 
-  authenMiddleware.isAuth, 
-  validationMiddlewares.validatePagination, 
+router.get('/wishlist',
+  sanitizeInput,
+  authenMiddleware.isAuth,
+  validationMiddlewares.validatePagination,
   userController.wishlist);
 router.post(
-  "/wishlist/add/:id",
+  '/wishlist/add/:id',
   sanitizeInput,
   authenMiddleware.isAuth,
   validationMiddlewares.validateMongoId,
-  userController.addWishlist
+  userController.addWishlist,
 );
 router.delete(
-  "/wishlist/remove/:id",
+  '/wishlist/remove/:id',
   sanitizeInput,
   authenMiddleware.isAuth,
   validationMiddlewares.validateMongoId,
-  userController.removeWishlist
+  userController.removeWishlist,
 );
 router.delete(
-  "/wishlist/removeAll",
+  '/wishlist/removeAll',
   authenMiddleware.isAuth,
-  userController.removeAllWishlist
+  userController.removeAllWishlist,
 );
 
 //admin
-router.get("/", userController.userList);
+router.get('/', userController.userList);
 
 module.exports = router;
 

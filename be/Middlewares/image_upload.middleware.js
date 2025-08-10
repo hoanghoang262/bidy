@@ -1,6 +1,6 @@
 const multer = require('multer');
 
-var imagePath;
+let _imagePath;
 const storage = multer.memoryStorage(
 //   {
 //   destination: function (req, file, cb, next) {
@@ -21,8 +21,8 @@ const storage = multer.memoryStorage(
 //     cb(null, file.originalname);
 //   },
 // }
-)
+);
 
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage });
 
 module.exports = upload;

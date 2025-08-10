@@ -1,12 +1,12 @@
-const User = require("../user_components/models/user.model");
-const Auction = require("../auction_component/models/bid.model");
-const Category = require("../auction_component/models/category.model");
-const auctionService = require("../auction_component/auction.service");
-const userService = require("../user_components/user.service");
-const { response } = require("../util/response");
-const { formatWord } = require("../util/format");
-const { transValidation, responseStatus, errorCode } = require("../langs/vn");
-const aws = require("aws-sdk");
+const User = require('../user_components/models/user.model');
+const Auction = require('../auction_component/models/bid.model');
+const Category = require('../auction_component/models/category.model');
+const auctionService = require('../auction_component/auction.service');
+const userService = require('../user_components/user.service');
+const { response } = require('../util/response');
+const { formatWord } = require('../util/format');
+const { transValidation, responseStatus, errorCode } = require('../langs/vn');
+const aws = require('aws-sdk');
 const s3 = new aws.S3();
 
 // ---> common
@@ -26,8 +26,8 @@ const getAllUser = async (req, res) => {
     const query = {};
     if (keyword) {
       query.$or = [
-        { full_name: { $regex: keyword, $options: "i" } },
-        { email: { $regex: keyword, $options: "i" } },
+        { full_name: { $regex: keyword, $options: 'i' } },
+        { email: { $regex: keyword, $options: 'i' } },
       ];
     }
     if (status !== undefined) {
@@ -41,7 +41,7 @@ const getAllUser = async (req, res) => {
     const { total: totalUsers, totalPages } = await getTotal(
       User,
       query,
-      limitNumber
+      limitNumber,
     );
 
     const result = {
@@ -53,7 +53,7 @@ const getAllUser = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (err) {
     return res
@@ -76,13 +76,13 @@ const updateStatusUser = async (req, res) => {
     const update = await User.findOneAndUpdate(
       { _id: id },
       { status: !isExist.status },
-      { new: true }
+      { new: true },
     );
 
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, update)
+        response(responseStatus.success, transValidation.input_correct, update),
       );
   } catch (error) {
     return res
@@ -100,19 +100,19 @@ const getAllAuction = async (req, res) => {
   try {
     const query = {
       ...(keyword && {
-        name: { $regex: keyword, $options: "i" },
+        name: { $regex: keyword, $options: 'i' },
       }),
     };
 
     const auctions = await Auction.find(query)
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
-      .populate("category", "name");
+      .populate('category', 'name');
 
     const { total: totalAuctions, totalPages } = await getTotal(
       Auction,
       query,
-      limitNumber
+      limitNumber,
     );
 
     const result = {
@@ -125,7 +125,7 @@ const getAllAuction = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (err) {
     return res
@@ -141,7 +141,7 @@ const getAllCate = async (req, res) => {
   const limitNumber = +limit || +process.env.ADMIN_LIMIT_NUMBER;
   const query = {
     ...(keyword && {
-      name: { $regex: keyword, $options: "i" },
+      name: { $regex: keyword, $options: 'i' },
     }),
     ...(status && { status }),
   };
@@ -153,7 +153,7 @@ const getAllCate = async (req, res) => {
     const { total: totalCategories, totalPages } = await getTotal(
       Category,
       query,
-      limitNumber
+      limitNumber,
     );
 
     const result = {
@@ -166,7 +166,7 @@ const getAllCate = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (err) {
     return res
@@ -207,13 +207,13 @@ const createCate = async (req, res) => {
           response(
             responseStatus.fail,
             transValidation.bad_request,
-            errorCode.bad_request
-          )
+            errorCode.bad_request,
+          ),
         );
     }
 
     const isExist = await Category.findOne({
-      name: { $regex: sanitizedName, $options: "i" },
+      name: { $regex: sanitizedName, $options: 'i' },
     });
 
     if (isExist) {
@@ -236,7 +236,7 @@ const createCate = async (req, res) => {
     return res
       .status(201)
       .json(
-        response(responseStatus.success, transValidation.input_correct, newCate)
+        response(responseStatus.success, transValidation.input_correct, newCate),
       );
   } catch (error) {
     return res.status(500).json(response(responseStatus.error, error.message));
@@ -270,7 +270,7 @@ const updateCate = async (req, res) => {
     const updateCate = await Category.findOneAndUpdate(
       { _id: id },
       { name: sanitizedName, image: url },
-      { new: true }
+      { new: true },
     );
 
     res
@@ -279,8 +279,8 @@ const updateCate = async (req, res) => {
         response(
           responseStatus.success,
           transValidation.input_correct,
-          updateCate
-        )
+          updateCate,
+        ),
       );
   } catch (error) {
     return res.status(500).json(response(responseStatus.error, error.message));
@@ -299,7 +299,7 @@ const deleteCate = async (req, res) => {
       return res
         .status(404)
         .json(
-          response(responseStatus.error, transValidation.category_not_exist)
+          response(responseStatus.error, transValidation.category_not_exist),
         );
     }
 
@@ -312,7 +312,7 @@ const deleteCate = async (req, res) => {
 };
 
 // ---> statistic
-const getStatisticUser = async (req, res) => {
+const getStatisticUser = async (_req, _res) => {
   const totalUsers = await User.find();
   const isBlock = totalUsers.filter((i) => i.status === false).length;
 
@@ -323,11 +323,11 @@ const getStatisticUser = async (req, res) => {
   };
 };
 
-const getStatisticAuction = async (req, res) => {
+const getStatisticAuction = async (_req, _res) => {
   const totalAuctions = await Auction.find();
-  const isFinished = totalAuctions.filter((i) => i.status === "end").length;
+  const isFinished = totalAuctions.filter((i) => i.status === 'end').length;
   const isHappening = totalAuctions.filter(
-    (i) => i.status === "happenning"
+    (i) => i.status === 'happenning',
   ).length;
 
   return {
@@ -337,7 +337,7 @@ const getStatisticAuction = async (req, res) => {
   };
 };
 
-const getStatisticCate = async (req, res) => {
+const getStatisticCate = async (_req, _res) => {
   const totalCategories = await Category.find();
   const isHide = totalCategories.filter((i) => i.status === false).length;
 
@@ -376,7 +376,7 @@ const getStatistic = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, result)
+        response(responseStatus.success, transValidation.input_correct, result),
       );
   } catch (error) {
     return res.status(500).json(response(responseStatus.error, error.message));
@@ -391,7 +391,7 @@ const getStatsAuctions = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, stats)
+        response(responseStatus.success, transValidation.input_correct, stats),
       );
   } catch (error) {
     return res.status(500).json(response(responseStatus.error, error.message));
@@ -405,7 +405,7 @@ const getStatsUsers = async (req, res) => {
     return res
       .status(200)
       .json(
-        response(responseStatus.success, transValidation.input_correct, stats)
+        response(responseStatus.success, transValidation.input_correct, stats),
       );
   } catch (error) {
     return res.status(500).json(response(responseStatus.error, error.message));

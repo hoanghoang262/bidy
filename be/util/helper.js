@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcrypt');
 
 const hashPassword = async (plain) => {
   const saltRounds = 10;
@@ -7,7 +7,7 @@ const hashPassword = async (plain) => {
 };
 
 const generateImageKey = (file) => {
-  const uniqueSuffix = Date.now() + "_" + Math.round(Math.random() * 1e9);
+  const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1e9);
   return `${file?.name}_${uniqueSuffix}`;
 };
 

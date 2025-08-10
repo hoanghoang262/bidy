@@ -1,9 +1,9 @@
 exports.response = (status, message, data) => {
-	let result = {
+	const result = {
 		status,
 		message,
 	};
-	data && result.status === "success" ? (result.data = data) : (result.error_code = data);
+	data && result.status === 'success' ? (result.data = data) : (result.error_code = data);
 
 	return result;
 };

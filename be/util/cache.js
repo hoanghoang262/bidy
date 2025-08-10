@@ -15,7 +15,7 @@ class MemoryCache {
   // Get cache value
   get(key) {
     const ttlTime = this.ttl.get(key);
-    
+
     // Check if expired
     if (ttlTime && Date.now() > ttlTime) {
       this.cache.delete(key);
@@ -29,7 +29,7 @@ class MemoryCache {
   // Check if key exists and not expired
   has(key) {
     const ttlTime = this.ttl.get(key);
-    
+
     if (ttlTime && Date.now() > ttlTime) {
       this.cache.delete(key);
       this.ttl.delete(key);
@@ -57,7 +57,7 @@ class MemoryCache {
   stats() {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 
@@ -86,7 +86,7 @@ const CACHE_KEYS = {
   CATEGORIES: 'categories_all',
   USER_PROFILE: (id) => `user_profile_${id}`,
   AUCTION_STATS: 'auction_stats',
-  POPULAR_AUCTIONS: 'popular_auctions'
+  POPULAR_AUCTIONS: 'popular_auctions',
 };
 
 // Cache TTL settings (in milliseconds)
@@ -94,11 +94,11 @@ const CACHE_TTL = {
   CATEGORIES: 3600000,    // 1 hour (categories don't change often)
   USER_PROFILE: 300000,   // 5 minutes
   AUCTION_STATS: 600000,  // 10 minutes
-  POPULAR_AUCTIONS: 300000 // 5 minutes
+  POPULAR_AUCTIONS: 300000, // 5 minutes
 };
 
 module.exports = {
   cache,
   CACHE_KEYS,
-  CACHE_TTL
+  CACHE_TTL,
 };

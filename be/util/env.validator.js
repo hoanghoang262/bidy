@@ -1,9 +1,9 @@
 // Backend Environment Variables Validation
 // Comprehensive validation system to ensure all environment variables are properly configured
 
-const chalk = require("chalk");
-const fs = require("fs");
-const path = require("path");
+const chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Environment variable validation configuration
@@ -13,32 +13,32 @@ const ENV_CONFIG = {
   required: [
     'JWT_SECRET',
     'MONGODB_URI',
-    'NODE_ENV'
+    'NODE_ENV',
   ],
-  
+
   // Required in production
   requiredInProduction: [
     'CLIENT_URL',
     'SERVER_URL',
-    'PORT'
+    'PORT',
   ],
-  
+
   // Recommended for production
   recommendedForProduction: [
     'CLIENT_URL_PROD',
     'CLIENT_URL_PROD_WWW',
     'SERVER_URL_PROD',
     'ACCESS_KEY_ID',
-    'SECRET_ACCESS_KEY'
+    'SECRET_ACCESS_KEY',
   ],
-  
+
   // Optional but validated if present
   optional: [
     'PAGE_NUMBER',
     'LIMIT_NUMBER',
     'ADMIN_LIMIT_NUMBER',
-    'ID_ADMIN'
-  ]
+    'ID_ADMIN',
+  ],
 };
 
 /**
@@ -53,32 +53,32 @@ const validators = {
       return false;
     }
   },
-  
+
   port: (value) => {
     const port = parseInt(value);
     return !isNaN(port) && port > 0 && port <= 65535;
   },
-  
+
   number: (value) => {
     return !isNaN(Number(value)) && Number(value) >= 0;
   },
-  
+
   string: (value) => {
     return typeof value === 'string' && value.trim().length > 0;
   },
-  
+
   mongoUri: (value) => {
     return value.startsWith('mongodb://') || value.startsWith('mongodb+srv://');
   },
-  
+
   environment: (value) => {
     return ['development', 'production', 'test', 'staging'].includes(value);
   },
-  
+
   jwtSecret: (value) => {
     // JWT secret should be at least 32 characters for security
     return typeof value === 'string' && value.length >= 32;
-  }
+  },
 };
 
 /**
@@ -99,7 +99,7 @@ const validationRules = {
   'ADMIN_LIMIT_NUMBER': validators.number,
   'ACCESS_KEY_ID': validators.string,
   'SECRET_ACCESS_KEY': validators.string,
-  'ID_ADMIN': validators.string
+  'ID_ADMIN': validators.string,
 };
 
 /**
@@ -108,13 +108,13 @@ const validationRules = {
 const checkEnvFile = () => {
   const envPath = path.join(__dirname, '../.env');
   const envExamplePath = path.join(__dirname, '../.env.example');
-  
+
   const results = {
     envExists: fs.existsSync(envPath),
     envExampleExists: fs.existsSync(envExamplePath),
-    envReadable: false
+    envReadable: false,
   };
-  
+
   if (results.envExists) {
     try {
       fs.accessSync(envPath, fs.constants.R_OK);
@@ -123,7 +123,7 @@ const checkEnvFile = () => {
       results.envReadable = false;
     }
   }
-  
+
   return results;
 };
 
@@ -132,14 +132,14 @@ const checkEnvFile = () => {
  */
 const validateEnvironment = () => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
+  const _isDevelopment = process.env.NODE_ENV === 'development';
+
   console.log(chalk.blue(`\n🔍 Validating environment variables (${process.env.NODE_ENV || 'unknown'})...\n`));
-  
+
   const validationErrors = [];
   const validationWarnings = [];
   const validationInfo = [];
-  
+
   // Check .env file status
   const envFileStatus = checkEnvFile();
   if (!envFileStatus.envExists) {
@@ -147,11 +147,11 @@ const validateEnvironment = () => {
   } else if (!envFileStatus.envReadable) {
     validationErrors.push('.env file exists but is not readable');
   }
-  
+
   if (!envFileStatus.envExampleExists) {
     validationWarnings.push('.env.example file not found - consider creating one for documentation');
   }
-  
+
   // Check required variables
   ENV_CONFIG.required.forEach(envVar => {
     const value = process.env[envVar];
@@ -161,7 +161,7 @@ const validateEnvironment = () => {
       validationErrors.push(`Invalid format for ${envVar}: ${getValidationMessage(envVar)}`);
     }
   });
-  
+
   // Check production-specific requirements
   if (isProduction) {
     ENV_CONFIG.requiredInProduction.forEach(envVar => {
@@ -172,7 +172,7 @@ const validateEnvironment = () => {
         validationErrors.push(`Invalid format for ${envVar}: ${getValidationMessage(envVar)}`);
       }
     });
-    
+
     // Check recommended for production
     ENV_CONFIG.recommendedForProduction.forEach(envVar => {
       const value = process.env[envVar];
@@ -180,17 +180,17 @@ const validateEnvironment = () => {
         validationWarnings.push(`Recommended for production: ${envVar}`);
       }
     });
-    
+
     // Production-specific checks
     if (process.env.CLIENT_URL && process.env.CLIENT_URL.includes('localhost')) {
       validationWarnings.push('CLIENT_URL contains localhost in production environment');
     }
-    
+
     if (process.env.SERVER_URL && process.env.SERVER_URL.includes('localhost')) {
       validationWarnings.push('SERVER_URL contains localhost in production environment');
     }
   }
-  
+
   // Validate optional variables if present
   ENV_CONFIG.optional.forEach(envVar => {
     const value = process.env[envVar];
@@ -198,7 +198,7 @@ const validateEnvironment = () => {
       validationErrors.push(`Invalid format for ${envVar}: ${getValidationMessage(envVar)}`);
     }
   });
-  
+
   // Security checks
   const jwtSecret = process.env.JWT_SECRET;
   if (jwtSecret) {
@@ -209,7 +209,7 @@ const validateEnvironment = () => {
       validationErrors.push('JWT_SECRET appears to be a default/weak value');
     }
   }
-  
+
   // Database connection validation
   const mongoUri = process.env.MONGODB_URI;
   if (mongoUri) {
@@ -220,7 +220,7 @@ const validateEnvironment = () => {
       validationInfo.push('Using remote MongoDB in development environment');
     }
   }
-  
+
   // Port validation
   const port = process.env.PORT;
   if (port) {
@@ -232,11 +232,11 @@ const validateEnvironment = () => {
       validationInfo.push(`Using common port ${port} - ensure no conflicts`);
     }
   }
-  
+
   // Report results
-  let hasErrors = validationErrors.length > 0;
-  let hasWarnings = validationWarnings.length > 0;
-  
+  const hasErrors = validationErrors.length > 0;
+  const hasWarnings = validationWarnings.length > 0;
+
   if (hasErrors) {
     console.log(chalk.red('❌ Environment Validation Errors:'));
     validationErrors.forEach(error => {
@@ -244,7 +244,7 @@ const validateEnvironment = () => {
     });
     console.log();
   }
-  
+
   if (hasWarnings) {
     console.log(chalk.yellow('⚠️  Environment Validation Warnings:'));
     validationWarnings.forEach(warning => {
@@ -252,7 +252,7 @@ const validateEnvironment = () => {
     });
     console.log();
   }
-  
+
   if (validationInfo.length > 0) {
     console.log(chalk.cyan('ℹ️  Environment Information:'));
     validationInfo.forEach(info => {
@@ -260,24 +260,24 @@ const validateEnvironment = () => {
     });
     console.log();
   }
-  
+
   if (!hasErrors && !hasWarnings) {
     console.log(chalk.green('✅ Environment validation passed - all configurations are valid\n'));
   } else if (!hasErrors) {
     console.log(chalk.yellow('✅ Environment validation passed with warnings\n'));
   }
-  
+
   // Fail in production if there are errors
   if (hasErrors && isProduction) {
     console.log(chalk.red('🚨 Stopping application due to environment validation errors in production\n'));
     process.exit(1);
   }
-  
+
   return {
     isValid: !hasErrors,
     errors: validationErrors,
     warnings: validationWarnings,
-    info: validationInfo
+    info: validationInfo,
   };
 };
 
@@ -300,9 +300,9 @@ const getValidationMessage = (envVar) => {
     'ADMIN_LIMIT_NUMBER': 'must be a positive number',
     'ACCESS_KEY_ID': 'must be a non-empty string',
     'SECRET_ACCESS_KEY': 'must be a non-empty string',
-    'ID_ADMIN': 'must be a non-empty string'
+    'ID_ADMIN': 'must be a non-empty string',
   };
-  
+
   return messages[envVar] || 'invalid format';
 };
 
@@ -312,31 +312,31 @@ const getValidationMessage = (envVar) => {
 const displayEnvironmentSummary = () => {
   console.log(chalk.blue('\n📋 Environment Configuration Summary:'));
   console.log(chalk.blue('================================================\n'));
-  
+
   console.log(chalk.cyan('Core Configuration:'));
   console.log(`  Environment: ${process.env.NODE_ENV || 'not set'}`);
   console.log(`  Port: ${process.env.PORT || 'not set'}`);
   console.log(`  MongoDB: ${process.env.MONGODB_URI ? '✓ configured' : '✗ not set'}`);
   console.log(`  JWT Secret: ${process.env.JWT_SECRET ? '✓ configured' : '✗ not set'}`);
-  
+
   console.log(chalk.cyan('\nClient Configuration:'));
   console.log(`  Client URL: ${process.env.CLIENT_URL || 'not set'}`);
   console.log(`  Production URL: ${process.env.CLIENT_URL_PROD || 'not set'}`);
-  
+
   console.log(chalk.cyan('\nServer Configuration:'));
   console.log(`  Server URL: ${process.env.SERVER_URL || 'not set'}`);
   console.log(`  Production URL: ${process.env.SERVER_URL_PROD || 'not set'}`);
-  
+
   console.log(chalk.cyan('\nPagination Settings:'));
   console.log(`  Page Number: ${process.env.PAGE_NUMBER || '1 (default)'}`);
   console.log(`  Limit Number: ${process.env.LIMIT_NUMBER || '10 (default)'}`);
   console.log(`  Admin Limit: ${process.env.ADMIN_LIMIT_NUMBER || '10 (default)'}`);
-  
+
   console.log();
 };
 
 module.exports = {
   validateEnvironment,
   displayEnvironmentSummary,
-  checkEnvFile
+  checkEnvFile,
 };

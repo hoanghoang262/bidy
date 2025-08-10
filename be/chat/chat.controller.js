@@ -1,23 +1,23 @@
-const Conversation = require("./models/conversation.model");
-const Message = require("./models/message.model");
-const User = require("../user_components/models/user.model");
-require("dotenv").config();
-const { transValidation, responseStatus, errorCode } = require("../langs/vn");
-const { response } = require("../util/response");
+const Conversation = require('./models/conversation.model');
+const Message = require('./models/message.model');
+const User = require('../user_components/models/user.model');
+require('dotenv').config();
+const { transValidation, responseStatus, errorCode: _errorCode } = require('../langs/vn');
+const { response } = require('../util/response');
 
 const socket = (io) => {
 	const users = [];
-	io.on("connection", (socket) => {
-		socket.on("addUser", (userId) => {
+	io.on('connection', (socket) => {
+		socket.on('addUser', (userId) => {
 			const user = { userId, socketId: socket.id };
 			const isUserExist = users.find((user) => user.userId === userId);
 			if (!isUserExist) {
 				users.push(user);
-				socket.emit("getUsers", users);
+				socket.emit('getUsers', users);
 			}
 		});
 
-		socket.on("sendMessage", async ({ senderId, receiverId, conversationId, message }) => {
+		socket.on('sendMessage', ({ senderId, receiverId, conversationId, message }) => {
 			// const receiver = users.find((user) => user.userId === receiverId);
 
 			// if (receiver) {
@@ -30,7 +30,7 @@ const socket = (io) => {
 			// 	console.log("-----------Socket send mesage-------------------");
 			// }
 
-			socket.broadcast.emit("getMessage", {
+			socket.broadcast.emit('getMessage', {
 				senderId,
 				receiverId,
 				conversationId,
@@ -38,11 +38,11 @@ const socket = (io) => {
 			});
 		});
 
-		io.on("disconnect", () => {
+		io.on('disconnect', () => {
 			const userIndex = users.findIndex((user) => user.socketId === socket.id);
 			if (userIndex !== -1) {
 				users.splice(userIndex, 1);
-				io.emit("getUsers", users);
+				io.emit('getUsers', users);
 			}
 		});
 	});
@@ -90,7 +90,7 @@ const getAllConversation = async (req, res) => {
 						email: user?.email,
 					},
 				};
-			})
+			}),
 		);
 
 		return res.status(200).json(response(responseStatus.success, transValidation.input_correct, result));

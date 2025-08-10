@@ -5,17 +5,17 @@ const logger = require('../util/logger');
 /**
  * Error handling middleware - must be last middleware in the chain
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   // Default error values
   let statusCode = 500;
   let message = transValidation.internal_error || 'Internal Server Error';
-  
+
   // Log error for debugging
   logger.error('Error occurred', err, {
     method: req.method,
     url: req.originalUrl,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
   });
 
   // Mongoose validation error
@@ -80,24 +80,24 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json(
     response(responseStatus.fail, message, process.env.NODE_ENV === 'development' ? {
       stack: err.stack,
-      error: err.message
-    } : undefined)
+      error: err.message,
+    } : undefined),
   );
 };
 
 /**
  * 404 Not Found middleware
  */
-const notFoundHandler = (req, res, next) => {
+const notFoundHandler = (req, res, _next) => {
   const message = `Route ${req.originalUrl} not found`;
   logger.warn('Route not found', {
     method: req.method,
     url: req.originalUrl,
-    ip: req.ip
+    ip: req.ip,
   });
-  
+
   res.status(404).json(
-    response(responseStatus.fail, message)
+    response(responseStatus.fail, message),
   );
 };
 
@@ -118,7 +118,7 @@ class AppError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -127,5 +127,5 @@ module.exports = {
   errorHandler,
   notFoundHandler,
   asyncHandler,
-  AppError
+  AppError,
 };

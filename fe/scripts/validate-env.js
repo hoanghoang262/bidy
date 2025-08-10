@@ -8,29 +8,27 @@ const path = require('path');
 
 console.log('🔍 Bidy Frontend - Environment Validation Tool\n');
 
-// Check for environment files
-const envFiles = ['.env.local', '.env', '.env.example'];
-const existingEnvFiles = envFiles.filter(file => 
-  fs.existsSync(path.join(__dirname, '..', file))
-);
+// Check for environment files  
+const envFiles = [
+  { name: '.env (frontend)', path: path.join(__dirname, '..', '.env') },
+  { name: '.env.example', path: path.join(__dirname, '..', '.env.example') }
+];
 
 console.log('📁 Environment Files:');
-envFiles.forEach(file => {
-  const exists = existingEnvFiles.includes(file);
-  console.log(`   ${exists ? '✅' : '❌'} ${file}`);
+envFiles.forEach(({ name, path: filePath }) => {
+  const exists = fs.existsSync(filePath);
+  console.log(`   ${exists ? '✅' : '❌'} ${name}`);
 });
 console.log();
 
-if (existingEnvFiles.length === 0) {
-  console.log('⚠️  No environment files found!');
-  console.log('   Please create .env.local from .env.example\n');
+// Load environment variables from frontend directory
+const feEnvPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(feEnvPath)) {
+  require('dotenv').config({ path: feEnvPath });
+} else {
+  console.log('⚠️  No .env file found in frontend directory!');
+  console.log('   Please create .env file in fe/ directory\\n');
   process.exit(1);
-}
-
-// Load environment variables (simulate Next.js loading)
-const envPath = path.join(__dirname, '..', '.env.local');
-if (fs.existsSync(envPath)) {
-  require('dotenv').config({ path: envPath });
 }
 
 // Validation rules

@@ -1,4 +1,4 @@
-const { model, models, Schema } = require("mongoose");
+const { model, models, Schema } = require('mongoose');
 
 const bidSchema = new Schema(
 	{
@@ -7,7 +7,7 @@ const bidSchema = new Schema(
 		},
 		owner: {
 			type: Schema.Types.ObjectId,
-			ref: "User",
+			ref: 'User',
 			required: true,
 		},
 		time_remain: {
@@ -26,7 +26,7 @@ const bidSchema = new Schema(
 		},
 		category: {
 			type: Schema.Types.ObjectId,
-			ref: "Category",
+			ref: 'Category',
 			required: true,
 		},
 		finishedTime: {
@@ -48,7 +48,7 @@ const bidSchema = new Schema(
 			{
 				user_id: {
 					type: Schema.Types.ObjectId,
-					ref: "User",
+					ref: 'User',
 					required: true,
 				},
 				user_name: {
@@ -67,7 +67,7 @@ const bidSchema = new Schema(
 		],
 		status: { type: String },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 // Performance optimization: Add database indexes for frequently queried fields
@@ -81,5 +81,5 @@ bidSchema.index({ createdAt: -1 }); // For sorting by creation date
 bidSchema.index({ status: 1, finishedTime: 1 }); // Compound index for active auctions
 bidSchema.index({ owner: 1, status: 1 }); // Compound index for user's auctions by status
 
-const Bid = models.Bid || model("Bid", bidSchema);
+const Bid = models.Bid || model('Bid', bidSchema);
 module.exports = Bid;

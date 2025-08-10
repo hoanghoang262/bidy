@@ -1,67 +1,67 @@
-const expess = require("express");
+const expess = require('express');
 const router = expess.Router();
-const authenMiddleware = require("../Middlewares/authen.middleware");
-const adminController = require("./admin.controller");
-const uploadMiddleware = require("../Middlewares/image_upload.middleware");
+const authenMiddleware = require('../Middlewares/authen.middleware');
+const adminController = require('./admin.controller');
+const uploadMiddleware = require('../Middlewares/image_upload.middleware');
 
 // ---> user
 router.get(
-  "/get-all-user",
+  '/get-all-user',
   authenMiddleware.isAdmin,
-  adminController.getAllUser
+  adminController.getAllUser,
 );
 router.put(
-  "/update-status-user/:id",
+  '/update-status-user/:id',
   authenMiddleware.isAdmin,
-  adminController.updateStatusUser
+  adminController.updateStatusUser,
 );
 
 // ---> auction
 router.get(
-  "/get-all-auction",
+  '/get-all-auction',
   authenMiddleware.isAdmin,
-  adminController.getAllAuction
+  adminController.getAllAuction,
 );
 
 // ---> category
 router.get(
-  "/get-all-category",
+  '/get-all-category',
   authenMiddleware.isAdmin,
-  adminController.getAllCate
+  adminController.getAllCate,
 );
 router.post(
-  "/create-category",
-  uploadMiddleware.array("images"),
+  '/create-category',
+  uploadMiddleware.array('images'),
   authenMiddleware.isAdmin,
-  adminController.createCate
+  adminController.createCate,
 );
 router.patch(
-  "/update-category/:id",
-  uploadMiddleware.array("images"),
+  '/update-category/:id',
+  uploadMiddleware.array('images'),
   authenMiddleware.isAdmin,
-  adminController.updateCate
+  adminController.updateCate,
 );
 router.delete(
-  "/delete-category/:id",
+  '/delete-category/:id',
   authenMiddleware.isAdmin,
-  adminController.deleteCate
+  adminController.deleteCate,
 );
 
 // ---> statistic
 router.get(
-  "/get-statistic",
+  '/get-statistic',
   authenMiddleware.isAdmin,
-  adminController.getStatistic
+  adminController.getStatistic,
 );
 router.get(
-  "/statistic/auctions",
+  '/statistic/auctions',
   authenMiddleware.isAdmin,
-  adminController.getStatsAuctions
+  adminController.getStatsAuctions,
 );
 router.get(
-  "/statistic/users",
+  '/statistic/users',
   authenMiddleware.isAdmin,
-  adminController.getStatsUsers
+  adminController.getStatsUsers,
 );
 
 module.exports = router;

@@ -1,26 +1,26 @@
 // Core dependencies
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-const path = require("path");
-const fs = require("fs/promises");
+const _jwt = require('jsonwebtoken');
+const _nodemailer = require('nodemailer');
+const path = require('path');
+const fs = require('fs/promises');
 
 // Models
-const Auction = require("./models/bid.model");
-const Cart = require("./models/cart.model");
-const Category = require("./models/category.model");
-const Order = require("./models/order.model");
-const User = require("../user_components/models/user.model");
-const Wishlist = require("../user_components/models/wishlist.model");
+const Auction = require('./models/bid.model');
+const Cart = require('./models/cart.model');
+const Category = require('./models/category.model');
+const Order = require('./models/order.model');
+const User = require('../user_components/models/user.model');
+const Wishlist = require('../user_components/models/wishlist.model');
 
 // Utilities
-const { s3, getPresignedUrl } = require("../util/aws.config");
-const { cache, CACHE_KEYS, CACHE_TTL } = require("../util/cache");
-const { formatPrice } = require("../util/formatPrice");
-const { getPagination, getFilteredPaginatedData } = require("../util/pagination");
-const filterAuctionEndWithTimeAgo = require("../util/filterAuctionEndWithTimeAgo");
-const logger = require("../util/logger");
+const { s3: _s3, getPresignedUrl: _getPresignedUrl } = require('../util/aws.config');
+const { cache, CACHE_KEYS, CACHE_TTL } = require('../util/cache');
+const { formatPrice } = require('../util/formatPrice');
+const { getPagination, getFilteredPaginatedData } = require('../util/pagination');
+const filterAuctionEndWithTimeAgo = require('../util/filterAuctionEndWithTimeAgo');
+const logger = require('../util/logger');
 
-require("dotenv").config();
+require('dotenv').config();
 
 const getLinkImage = async (files) => {
   const results = await Promise.all(files.map((key) => getImageUrl(key)));
@@ -29,17 +29,17 @@ const getLinkImage = async (files) => {
 
 async function getImageUrl(key) {
   try {
-    const baseUrl = process.env.SERVER_URL || "http://localhost:8001";
+    const baseUrl = process.env.SERVER_URL || 'http://localhost:8001';
     const response = await fetch(`${baseUrl}/images?key=${key}`);
     const data = await response.json();
     if (data.length > 0) {
       return data[0].url;
     } else {
-      return "";
+      return '';
     }
   } catch (error) {
     logger.error('Error getting presigned URL', error, { operation: 'getPresignedUrl' });
-    return "";
+    return '';
   }
 }
 
@@ -65,10 +65,10 @@ const getAllCategory = async () => {
 
   // If not in cache, fetch from database
   const data = await Category.find();
-  
+
   // Store in cache for 1 hour (categories don't change frequently)
   cache.set(CACHE_KEYS.CATEGORIES, data, CACHE_TTL.CATEGORIES);
-  
+
   return data;
 };
 
@@ -83,8 +83,8 @@ const getProductBySearch = async (keyword, pageNumber, limitNumber) => {
       data: 'auction',
       total: 'totalAuctions',
       totalPages: 'totalPages',
-      currentPage: 'currentPage'
-    }
+      currentPage: 'currentPage',
+    },
   });
 };
 
@@ -95,7 +95,7 @@ const getProductByCategory = async (category, pageNumber, limitNumber) => {
     // Check cache first for category lookup
     const cacheKey = `category_${category}`;
     let categoryData = cache.get(cacheKey);
-    
+
     if (!categoryData) {
       categoryData = await Category.findOne({ name: category });
       if (categoryData) {
@@ -115,7 +115,7 @@ const getProductByCategory = async (category, pageNumber, limitNumber) => {
         .skip(skip)
         .limit(limitNumber)
         .lean(), // Use lean() for better performance (returns plain objects)
-      Auction.countDocuments({ category: categoryData._id })
+      Auction.countDocuments({ category: categoryData._id }),
     ]);
 
     const totalPages = Math.ceil(totalCount / limitNumber);
@@ -139,16 +139,16 @@ const getProductByStatus = async (status, pageNumber, limitNumber) => {
     pageNumber,
     limitNumber,
     populate: [{
-      path: "owner",
-      select: "full_name _id",
+      path: 'owner',
+      select: 'full_name _id',
     }],
     responseKeys: {
       data: 'auction',
       total: 'totalAuctions',
       totalPages: 'totalPages',
-      currentPage: 'currentPage'
+      currentPage: 'currentPage',
     },
-    lean: false  // Need full documents for date checking
+    lean: false,  // Need full documents for date checking
   });
 
   // Handle auction end logic
@@ -169,16 +169,16 @@ const getUserProductByStatus = async (id, status, pageNumber, limitNumber) => {
     pageNumber,
     limitNumber,
     populate: [{
-      path: "owner",
-      select: "full_name _id",
+      path: 'owner',
+      select: 'full_name _id',
     }],
     responseKeys: {
       data: 'auction',
       total: 'totalAuctions',
       totalPages: 'totalPages',
-      currentPage: 'currentPage'
+      currentPage: 'currentPage',
     },
-    lean: false  // Need full documents for date checking
+    lean: false,  // Need full documents for date checking
   });
 
   // Handle auction end logic
@@ -199,15 +199,15 @@ const getAuctionUserBought = async (userId, pageNumber, limitNumber) => {
     pageNumber,
     limitNumber,
     populate: [{
-      path: "bid_id",
+      path: 'bid_id',
       populate: [
         {
-          path: "category",
-          select: "name",
+          path: 'category',
+          select: 'name',
         },
         {
-          path: "owner",
-          select: "full_name _id",
+          path: 'owner',
+          select: 'full_name _id',
         },
       ],
     }],
@@ -215,8 +215,8 @@ const getAuctionUserBought = async (userId, pageNumber, limitNumber) => {
       data: 'orders',
       total: 'totalOrders',
       totalPages: 'totalPages',
-      currentPage: 'currentPage'
-    }
+      currentPage: 'currentPage',
+    },
   });
 };
 
@@ -226,13 +226,13 @@ const getAuctionUserSold = async (userId, pageNumber, limitNumber) => {
     filter: { owner: userId },
     pageNumber,
     limitNumber,
-    populate: ["category"],  // Simplified population
+    populate: ['category'],  // Simplified population
     responseKeys: {
       data: 'auction',
       total: 'totalAuctions',
       totalPages: 'totalPages',
-      currentPage: 'currentPage'
-    }
+      currentPage: 'currentPage',
+    },
   });
 };
 
@@ -254,8 +254,8 @@ const getMonthlyAuctionStats = async (yearParam) => {
     {
       $group: {
         _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" },
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
         },
         count: { $sum: 1 },
       },
@@ -265,13 +265,13 @@ const getMonthlyAuctionStats = async (yearParam) => {
         _id: 0,
         month: {
           $concat: [
-            { $toString: "$_id.year" },
-            "-",
+            { $toString: '$_id.year' },
+            '-',
             {
               $cond: [
-                { $lt: ["$_id.month", 10] },
-                { $concat: ["0", { $toString: "$_id.month" }] },
-                { $toString: "$_id.month" },
+                { $lt: ['$_id.month', 10] },
+                { $concat: ['0', { $toString: '$_id.month' }] },
+                { $toString: '$_id.month' },
               ],
             },
           ],
@@ -283,11 +283,11 @@ const getMonthlyAuctionStats = async (yearParam) => {
   ]);
 
   const fullStats = Array.from({ length: maxMonth }, (_, i) => {
-    const month = `${targetYear}-${String(i + 1).padStart(2, "0")}`;
+    const month = `${targetYear}-${String(i + 1).padStart(2, '0')}`;
     const found = stats.find((s) => s.month === month);
     return {
       month,
-      amount: found ? String(found.count) : "0",
+      amount: found ? String(found.count) : '0',
     };
   });
 
@@ -296,15 +296,15 @@ const getMonthlyAuctionStats = async (yearParam) => {
 
 const activeAutoBid = async () => {
   const auctions = await Auction.find({
-    status: "happenning",
+    status: 'happenning',
     hasActiveAutoBid: true,
   });
 
-  let text = "stop";
+  let text = 'stop';
 
   for (const auc of auctions) {
     const highestOwner = auc.top_ownerships.sort(
-      (a, b) => b.amount - a.amount
+      (a, b) => b.amount - a.amount,
     )?.[0];
 
     const sortedAutoOwners = auc.top_ownerships
@@ -317,12 +317,12 @@ const activeAutoBid = async () => {
       const autoOwner = sortedAutoOwners[0];
       if (highestOwner && highestOwner.user_id !== autoOwner.user_id) {
         const newAmount = Math.round(
-          (highestOwner.amount * +`1${process.env.PERCENT_AUTOBID}`) / 100
+          (highestOwner.amount * +`1${process.env.PERCENT_AUTOBID}`) / 100,
         );
         if (newAmount > autoOwner.limitBid) continue;
         await Auction.updateOne(
-          { _id: auc._id, "top_ownerships.user_id": autoOwner.user_id },
-          { $set: { "top_ownerships.$.amount": newAmount } }
+          { _id: auc._id, 'top_ownerships.user_id': autoOwner.user_id },
+          { $set: { 'top_ownerships.$.amount': newAmount } },
         );
         text = `Đã cập nhật giá tự động sản phẩm ${auc.name} - với người dùng ${autoOwner.user_name}`;
       }
@@ -338,22 +338,22 @@ const activeAutoBid = async () => {
           ? highestOwner.amount
           : secondAutoOwner.limitBid) *
           +`1${process.env.PERCENT_AUTOBID}`) /
-          100
+          100,
       );
 
       if (autoOwner.limitBid > newAmount) {
         await Auction.updateOne(
-          { _id: auc._id, "top_ownerships.user_id": autoOwner.user_id },
-          { $set: { "top_ownerships.$.amount": newAmount } }
+          { _id: auc._id, 'top_ownerships.user_id': autoOwner.user_id },
+          { $set: { 'top_ownerships.$.amount': newAmount } },
         );
       }
     } else {
       for (const owner of sortedAutoOwners.filter(
-        (i) => i.user_id !== highestOwner.user_id
+        (i) => i.user_id !== highestOwner.user_id,
       )) {
         await Auction.updateOne(
-          { _id: auc._id, "top_ownerships.user_id": owner.user_id },
-          { $set: { "top_ownerships.$.isAuto": false } }
+          { _id: auc._id, 'top_ownerships.user_id': owner.user_id },
+          { $set: { 'top_ownerships.$.isAuto': false } },
         );
         text = `Đã gỡ đấu giá tự động sản phẩm ${auc.name} - với người dùng ${owner.user_name} vì đã vượt quá giới hạn`;
       }
@@ -365,7 +365,7 @@ const activeAutoBid = async () => {
 
 const getAuctionEnd = async (pageNumber, limitNumber) => {
   const skip = (pageNumber - 1) * limitNumber;
-  const auction = await Auction.find({ status: "end" })
+  const auction = await Auction.find({ status: 'end' })
     .skip(skip)
     .limit(limitNumber);
   const auctionTenMinutes = filterAuctionEndWithTimeAgo(auction, 10);
@@ -385,12 +385,12 @@ const getAuctionEnd = async (pageNumber, limitNumber) => {
 const getProductById = async (id) => {
   const data = await Auction.findOne({ _id: id }).populate([
     {
-      path: "top_ownerships.user_id",
-      select: "full_name _id", // optional select here too
+      path: 'top_ownerships.user_id',
+      select: 'full_name _id', // optional select here too
     },
     {
-      path: "owner",
-      select: "full_name _id",
+      path: 'owner',
+      select: 'full_name _id',
     },
   ]);
   return data;
@@ -407,7 +407,7 @@ const updateProduct = async (id, body) => {
     : [];
 
   const uploadedImageKeys = await Promise.all(
-    (body.files || []).map(uploadToJsonServer)
+    (body.files || []).map(uploadToJsonServer),
   );
 
   const imagesKeys = [...stringImages, ...uploadedImageKeys];
@@ -423,30 +423,30 @@ const updateProduct = async (id, body) => {
       finishedTime: body.finishedTime,
       image: imagesKeys,
     },
-    { new: true }
+    { new: true },
   );
 };
 
 const uploadToJsonServer = async (file) => {
   const fileName = `${Date.now()}_${Math.random() * 1e9}_${file.originalname}`;
-  const filePath = path.join(__dirname, "../uploads", fileName);
+  const filePath = path.join(__dirname, '../uploads', fileName);
 
   await fs.writeFile(filePath, file.buffer);
 
   const url = `/uploads/${fileName}`;
 
   const key = fileName;
-  await fetch("http://localhost:8001/images", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  await fetch(`${process.env.SERVER_URL || 'http://localhost:8001'}/images`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key, url }),
   });
   return key;
 };
 
 const viewCart = async (id) => {
-  const data = await Cart.find({ user_id: id, status: "unpaid" });
-  let cartData = [];
+  const data = await Cart.find({ user_id: id, status: 'unpaid' });
+  const cartData = [];
   for (let i = 0; i < data.length; i++) {
     const bidData = await Auction.findOne({ _id: data[i].bid_id });
     cartData.push({
@@ -461,7 +461,7 @@ const deleteMyAuction = async (id, user_id) => {
   const data = await Auction.find({
     owner: user_id,
     _id: id,
-    status: "happenning",
+    status: 'happenning',
   });
   if (!data) {
     return;
@@ -479,7 +479,7 @@ const addBid = async (id, OwnershipData, hasActiveAutoBid) => {
     {
       $set: { hasActiveAutoBid },
       $push: { top_ownerships: OwnershipData },
-    }
+    },
   );
 };
 
@@ -487,11 +487,11 @@ const updateBid = async (id, OwnershipData) => {
   return await Auction.updateOne(
     {
       _id: id,
-      "top_ownerships.user_id": OwnershipData.user_id,
+      'top_ownerships.user_id': OwnershipData.user_id,
     },
     {
-      $set: { "top_ownerships.$.amount": OwnershipData.amount },
-    }
+      $set: { 'top_ownerships.$.amount': OwnershipData.amount },
+    },
   );
 };
 
@@ -511,11 +511,11 @@ const auctionBid = async (id, idUser, amount) => {
 
     if (currentTime >= threeMinutesBefore) {
       const updatedFinishedTime = new Date(
-        currentTime.getTime() + 3 * 60 * 1000
+        currentTime.getTime() + 3 * 60 * 1000,
       );
       await Auction.updateOne(
         { _id: id },
-        { status: "happenning", finishedTime: updatedFinishedTime }
+        { status: 'happenning', finishedTime: updatedFinishedTime },
       );
     }
 
@@ -557,15 +557,15 @@ const buyNow = async (id, idUser) => {
       },
       {
         $push: { top_ownerships: ownershipData },
-        status: "end",
+        status: 'end',
         finishedTime: new Date(),
-      }
+      },
     );
 
     const cart = new Cart({
       bid_id: data._id,
       user_id: userE._id,
-      status: "unpaid",
+      status: 'unpaid',
     });
 
     await sendEmail(
@@ -574,9 +574,9 @@ const buyNow = async (id, idUser) => {
       `Cảm ơn bạn đã tham gia đấu giá sản phẩm ${
         data.name
       }, bạn đã đấu giá thành công sản phẩm với giá là ${formatPrice(
-        data.priceBuyNow
+        data.priceBuyNow,
       )} VNĐ!`,
-      `Bạn có 3 ngày tính từ thời điểm này để hoàn tất thành toán, Xin cảm ơn!`
+      `Bạn có 3 ngày tính từ thời điểm này để hoàn tất thành toán, Xin cảm ơn!`,
     );
     return await cart.save();
   } catch (error) {
@@ -598,11 +598,11 @@ const autoBid = async (id, idUser, limitBid) => {
 
     if (currentTime >= threeMinutesBefore) {
       const updatedFinishedTime = new Date(
-        currentTime.getTime() + 3 * 60 * 1000
+        currentTime.getTime() + 3 * 60 * 1000,
       );
       await Auction.updateOne(
         { _id: id },
-        { status: "happenning", finishedTime: updatedFinishedTime }
+        { status: 'happenning', finishedTime: updatedFinishedTime },
       );
     }
 
@@ -615,10 +615,10 @@ const autoBid = async (id, idUser, limitBid) => {
     const topOwnerships = data.top_ownerships;
 
     const maxLimitBid = Math.max(
-      ...topOwnerships.map((item) => item.limitBid || 0)
+      ...topOwnerships.map((item) => item.limitBid || 0),
     );
     const maxAmount = Math.max(
-      ...topOwnerships.map((item) => item.amount || 0)
+      ...topOwnerships.map((item) => item.amount || 0),
     );
 
     const isMyTopBidNow =
@@ -644,18 +644,18 @@ const autoBid = async (id, idUser, limitBid) => {
       ? await Auction.updateOne(
           {
             _id: id,
-            "top_ownerships.user_id": idUser,
+            'top_ownerships.user_id': idUser,
           },
           {
             $set: {
               hasActiveAutoBid: true,
-              "top_ownerships.$.amount": isMyTopBidNow
+              'top_ownerships.$.amount': isMyTopBidNow
                 ? maxAmount
                 : ownershipData.amount,
-              "top_ownerships.$.isAuto": true,
-              "top_ownerships.$.limitBid": limitBid,
+              'top_ownerships.$.isAuto': true,
+              'top_ownerships.$.limitBid': limitBid,
             },
-          }
+          },
         )
       : await addBid(id, ownershipData, true);
   } catch (error) {
@@ -666,7 +666,7 @@ const autoBid = async (id, idUser, limitBid) => {
 const listingAuction = async (product, user_id) => {
   try {
     logger.info('Starting auction creation', { productName: product.name, userId: user_id, imageCount: product.image.length });
-    
+
     // Process uploaded files
     const keyImages = [];
     for (const file of product.image) {
@@ -675,9 +675,9 @@ const listingAuction = async (product, user_id) => {
       keyImages.push(key);
       logger.debug('Image file processed successfully', { key, fileName: file.originalname });
     }
-    
+
     logger.info('All image files processed successfully', { totalFiles: keyImages.length, productName: product.name });
-    
+
     const auction = new Auction({
       name: product.name,
       owner: user_id,
@@ -689,9 +689,9 @@ const listingAuction = async (product, user_id) => {
       description: product.description,
       finishedTime: product.finishedTime,
       image: keyImages,
-      status: "happenning",
+      status: 'happenning',
     });
-    
+
     logger.debug('Saving auction to database', { productName: product.name, userId: user_id });
     await auction.save();
     logger.info('Auction saved successfully', { auctionId: auction._id, productName: product.name, userId: user_id });
@@ -715,8 +715,8 @@ const eventBidEnd = async (id) => {
         { _id: id },
         {
           finishedTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          status: "happenning",
-        }
+          status: 'happenning',
+        },
       );
     }
     if (isExistOrder) return;
@@ -724,13 +724,13 @@ const eventBidEnd = async (id) => {
     await Auction.updateOne(
       { _id: id },
       {
-        status: "ended",
+        status: 'ended',
         finishedTime: new Date(),
         bidHideTime: new Date(bid.finishedTime.getTime() + 10 * 60 * 1000),
-      }
+      },
     );
     const [maxOwner, ...bidFail] = bid.top_ownerships.sort(
-      (a, b) => b.amount - a.amount
+      (a, b) => b.amount - a.amount,
     );
 
     // const [isExistInCart, cart, owner] = await Promise.all([
@@ -747,15 +747,19 @@ const eventBidEnd = async (id) => {
 
     // await cart.save();
 
+    // Get the owner for the email notification
+    const owner = await User.findOne({ _id: bid.owner });
+    if (!owner) return;
+
     await sendEmail(
       owner.email,
       `Chúc mừng ${owner.full_name} đã có sản phẩm được đấu giá thành công!`,
       `Sản phẩm ${
         bid.name
       } đã có người đấu giá thành công, bạn đã có sản phẩm đấu giá thành công sản phẩm với giá là ${formatPrice(
-        maxOwner.amount
+        maxOwner.amount,
       )} VNĐ!`,
-      `Chúng tôi sẽ sớm liên hệ lại với bạn! Xin cảm ơn`
+      `Chúng tôi sẽ sớm liên hệ lại với bạn! Xin cảm ơn`,
     );
 
     await sendEmail(
@@ -764,9 +768,9 @@ const eventBidEnd = async (id) => {
       `Cảm ơn bạn đã tham gia đấu giá sản phẩm ${
         bid.name
       }, bạn đã đấu giá thành công sản phẩm với giá là ${formatPrice(
-        maxOwner.amount
+        maxOwner.amount,
       )} VNĐ!`,
-      `Bạn có 3 ngày tính từ thời điểm này để hoàn tất thanh toán ! Xin cảm ơn`
+      `Bạn có 3 ngày tính từ thời điểm này để hoàn tất thanh toán ! Xin cảm ơn`,
     );
 
     for (const u of bidFail) {
@@ -774,7 +778,7 @@ const eventBidEnd = async (id) => {
         u.user_id.email,
         `Rất tiếc ${u.user_id.full_name} đã không đấu giá thành công!`,
         `Cảm ơn bạn đã tham gia đấu giá sản phẩm ${bid.name}, bạn đã không đấu giá thành công sản phẩm!`,
-        `Bạn có thể tham gia đấu giá sản phẩm khác! Xin cảm ơn`
+        `Bạn có thể tham gia đấu giá sản phẩm khác! Xin cảm ơn`,
       );
     }
   } catch (error) {
@@ -807,7 +811,7 @@ const eventCheckout = async (user_id) => {
 };
 
 // Basic sendEmail function for development/testing
-const sendEmail = async (to, subject, text, html) => {
+const sendEmail = (to, subject, _text, _html) => {
   logger.info('Sending email', { to, subject });
   logger.debug('Email service integration needed for production', { to, subject });
 };

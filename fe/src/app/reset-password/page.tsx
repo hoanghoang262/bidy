@@ -194,23 +194,7 @@ function ResetPasswordContent() {
   );
 }
 
-function ResetPasswordFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-accent-foreground to-background">
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-lg p-8 flex flex-col gap-6">
-        <div className="flex flex-col gap-4 items-center text-center">
-          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-            <Lock className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-primary">Đang tải...</h1>
-          <p className="text-foreground-secondary text-sm">
-            Vui lòng chờ trong giây lát
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Removed unused ResetPasswordFallback component
 
 export default function ResetPasswordPage() {
   return <ResetPasswordContent />;

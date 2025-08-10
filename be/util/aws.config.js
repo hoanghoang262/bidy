@@ -3,7 +3,7 @@
  * Single point for S3 and AWS service setup
  */
 
-const aws = require("aws-sdk");
+const aws = require('aws-sdk');
 
 // Configure AWS with environment variables
 aws.config.update({
@@ -24,10 +24,10 @@ const getPresignedUrl = (key) => {
     Bucket: process.env.BUCKET_NAME,
     Key: key,
   };
-  return s3.getSignedUrl("getObject", params);
+  return s3.getSignedUrl('getObject', params);
 };
 
 module.exports = {
   s3,
-  getPresignedUrl
+  getPresignedUrl,
 };

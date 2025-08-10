@@ -70,7 +70,7 @@ export default function ProductCTA({
     } else {
       setIsCheckingPayment(false);
     }
-  }, [productId, currentUser, productType]);
+  }, [productId, currentUser, productType, currentUserId]);
 
   if (productType === STATUS_AUCTIONS.ENDED) {
     if (isWinner) {

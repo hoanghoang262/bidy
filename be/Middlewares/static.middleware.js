@@ -12,7 +12,7 @@ const staticFallbackHandler = (req, res, next) => {
   }
 
   const filePath = path.join(__dirname, '..', req.path);
-  
+
   // Check if file exists
   if (fs.existsSync(filePath)) {
     return next();
@@ -22,23 +22,23 @@ const staticFallbackHandler = (req, res, next) => {
   logger.warn('Missing static file requested', {
     path: req.path,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
   });
 
   // Determine file type for appropriate fallback
   const ext = path.extname(req.path).toLowerCase();
-  
+
   if (['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
     // Image fallback - return a 1x1 transparent pixel
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=3600');
-    
+
     // 1x1 transparent PNG in base64
     const transparentPixel = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI/hcKGLwAAAABJRU5ErkJggg==',
-      'base64'
+      'base64',
     );
-    
+
     return res.status(200).end(transparentPixel);
   }
 
@@ -49,12 +49,12 @@ const staticFallbackHandler = (req, res, next) => {
 /**
  * Create placeholder image for missing images
  */
-const createPlaceholderImage = (width = 300, height = 200, text = 'Image Not Found') => {
+const createPlaceholderImage = (_width = 300, _height = 200, _text = 'Image Not Found') => {
   // This would require a library like jimp or sharp to generate
   // For now, return the transparent pixel
   return Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI/hcKGLwAAAABJRU5ErkJggg==',
-    'base64'
+    'base64',
   );
 };
 
@@ -66,7 +66,7 @@ const staticSecurityHeaders = (req, res, next) => {
     // Add security headers for static files
     res.set('X-Content-Type-Options', 'nosniff');
     res.set('X-Frame-Options', 'DENY');
-    
+
     // Set appropriate caching headers
     const ext = path.extname(req.path).toLowerCase();
     if (['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
@@ -79,5 +79,5 @@ const staticSecurityHeaders = (req, res, next) => {
 module.exports = {
   staticFallbackHandler,
   staticSecurityHeaders,
-  createPlaceholderImage
+  createPlaceholderImage,
 };

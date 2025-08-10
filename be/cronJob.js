@@ -1,28 +1,28 @@
-const cron = require("node-cron");
-const auctionService = require("./auction_component/auction.service");
+const cron = require('node-cron');
+const auctionService = require('./auction_component/auction.service');
 
 const startCronJob = () => {
 	// Optimized: Run every minute instead of every second (60x performance improvement)
 	// This is sufficient for auction bid processing and reduces server load significantly
-	const job = cron.schedule("0 * * * * *", async () => {
+	const job = cron.schedule('0 * * * * *', async () => {
 		try {
 			const result = await auctionService.activeAutoBid();
-			if (result === "stop") {
+			if (result === 'stop') {
 				// Cron job stopped
 				job.stop();
 			}
 		} catch (error) {
-			console.error("❌[Cron]: Error in cron job:", error.message);
+			console.error('❌[Cron]: Error in cron job:', error.message);
 		}
 	});
-	
+
 	// Add graceful shutdown handling
 	process.on('SIGTERM', () => {
 		console.log('⚡️[Cron]: Gracefully stopping cron job...');
 		if (job) job.stop();
 	});
-	
-	console.log("⚡️[Cron]: Auction cron job started (runs every minute)");
+
+	console.log('⚡️[Cron]: Auction cron job started (runs every minute)');
 };
 
 // const userService = require("./auction_component/auction.service");
