@@ -4,7 +4,7 @@
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001').split(',').map(url => url.trim());
 
 const corsConfig = {
-  origin: allowedOrigins,
+  origin: '*',
   credentials: true,
 };
 

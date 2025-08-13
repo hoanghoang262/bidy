@@ -25,8 +25,6 @@ const ENV_CONFIG = {
 
   // Recommended for production
   recommendedForProduction: [
-    'CLIENT_URL_PROD',
-    'CLIENT_URL_PROD_WWW',
     'SERVER_URL_PROD',
     'ACCESS_KEY_ID',
     'SECRET_ACCESS_KEY',
@@ -90,8 +88,6 @@ const validationRules = {
   'NODE_ENV': validators.environment,
   'PORT': validators.port,
   'CLIENT_URL': validators.url,
-  'CLIENT_URL_PROD': validators.url,
-  'CLIENT_URL_PROD_WWW': validators.url,
   'SERVER_URL': validators.url,
   'SERVER_URL_PROD': validators.url,
   'PAGE_NUMBER': validators.number,
@@ -291,8 +287,6 @@ const getValidationMessage = (envVar) => {
     'NODE_ENV': 'must be one of: development, production, test, staging',
     'PORT': 'must be a valid port number (1-65535)',
     'CLIENT_URL': 'must be a valid URL',
-    'CLIENT_URL_PROD': 'must be a valid URL',
-    'CLIENT_URL_PROD_WWW': 'must be a valid URL',
     'SERVER_URL': 'must be a valid URL',
     'SERVER_URL_PROD': 'must be a valid URL',
     'PAGE_NUMBER': 'must be a positive number',
@@ -321,7 +315,6 @@ const displayEnvironmentSummary = () => {
 
   console.log(chalk.cyan('\nClient Configuration:'));
   console.log(`  Client URL: ${process.env.CLIENT_URL || 'not set'}`);
-  console.log(`  Production URL: ${process.env.CLIENT_URL_PROD || 'not set'}`);
 
   console.log(chalk.cyan('\nServer Configuration:'));
   console.log(`  Server URL: ${process.env.SERVER_URL || 'not set'}`);

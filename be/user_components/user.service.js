@@ -15,14 +15,33 @@ const bcrypt = require('bcrypt');
 
 const loginUser = async (userName, password) => {
   // Find user by username only (not password)
+  // Support both boolean true and string 'true' for backwards compatibility
   const user = await User.findOne({
     user_name: userName?.toLowerCase(),
-    status: 'true',
+    $or: [
+      { status: true },
+      { status: 'true' }
+    ]
   });
 
   if (user !== null) {
-    // Use bcrypt to compare plain text password with hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    let isPasswordValid = false;
+    
+    // Check if password is already hashed (starts with $2b$ or similar)
+    if (user.password.startsWith('$2') && user.password.includes('$')) {
+      // Password is hashed, use bcrypt compare
+      isPasswordValid = await bcrypt.compare(password, user.password);
+    } else {
+      // Password is plain text (temporary backwards compatibility)
+      // TODO: Remove this after all passwords are hashed
+      isPasswordValid = (password === user.password);
+      
+      // Auto-migrate: hash the plain text password
+      if (isPasswordValid) {
+        const hashedPassword = await hashPassword(password);
+        await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+      }
+    }
 
     if (isPasswordValid) {
       const payload = {
@@ -74,7 +93,7 @@ const register = async (
         email: email,
         identity: identity,
         phone: phone,
-        status: false,
+        status: false, // Ensure boolean false for inactive users
         role: 'user',
       });
       await user.save(user);

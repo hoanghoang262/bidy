@@ -28,12 +28,11 @@ bidy/
    cd bidy
    ```
 
-2. **Frontend Setup**
-   ```bash
-   cd fe
-   npm install
-   npm run dev          # Starts on localhost:3001
-   ```
+2. **Install MongoDB**
+   - **macOS**: `brew install mongodb-community`
+   - **Ubuntu/Debian**: `sudo apt-get install mongodb`
+   - **Windows**: Download from [MongoDB official website](https://www.mongodb.com/try/download/community)
+   - Start MongoDB: `mongod` (or `brew services start mongodb-community` on macOS)
 
 3. **Backend Setup**
    ```bash
@@ -42,6 +41,65 @@ bidy/
    cp .env.example .env  # Configure your environment
    npm start            # Starts on localhost:8001
    ```
+
+4. **Frontend Setup**
+   ```bash
+   cd fe
+   npm install
+   npm run dev          # Starts on localhost:3001
+   ```
+
+5. **Verify Installation**
+   - Open [http://localhost:3001](http://localhost:3001) - Frontend should load
+   - Open [http://localhost:8001/api-docs](http://localhost:8001/api-docs) - Swagger documentation
+   - Check MongoDB connection: Backend console should show "Connected to MongoDB"
+
+## 📖 How to Use
+
+### User Registration & Login
+1. Navigate to [http://localhost:3001](http://localhost:3001)
+2. Click "Đăng ký" (Register) to create a new account
+3. Fill in your details and submit
+4. Login with your credentials
+
+### Creating an Auction
+1. Login to your account
+2. Click "Đăng bán" (Sell) in the navigation
+3. Select a category for your item
+4. Fill in item details:
+   - Title and description
+   - Starting price
+   - Auction duration
+   - Upload images (up to 5)
+5. Submit to create the auction
+
+### Bidding on Items
+1. Browse categories or use search
+2. Click on an item to view details
+3. Enter your bid amount (must be higher than current bid)
+4. Click "Đặt giá" (Place Bid)
+5. Monitor real-time bid updates
+
+### Chat System
+1. Click "Nhắn tin" (Message) on any auction item
+2. Send messages to the seller
+3. View chat history in "Tin nhắn" section
+
+### Admin Dashboard
+1. Login with admin credentials
+2. Access admin panel at `/admin`
+3. Manage:
+   - Users and permissions
+   - Auction listings
+   - Categories
+   - Reports and analytics
+
+### Key Features for Users
+- **Auto-bidding**: Set maximum bid and let system bid for you
+- **Wishlist**: Save items for later
+- **Notifications**: Real-time alerts for outbid situations
+- **Seller Dashboard**: Track your listings and sales
+- **Order History**: View won auctions and purchases
 
 ## 🌐 Production Deployment
 
@@ -183,6 +241,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 ### Frontend
 ```bash
 cd fe
+npm run lint        # Run ESLint
 npm run test        # Unit tests  
 npm run test:e2e    # Playwright E2E tests
 ```
@@ -193,6 +252,32 @@ cd be
 npm test           # Jest unit tests
 npm run test:coverage  # Coverage report
 ```
+
+## 🛠️ Common Issues & Solutions
+
+### MongoDB Connection Failed
+- Ensure MongoDB is running: `mongod` or `brew services start mongodb-community`
+- Check connection string in `/be/util/mongoose.js`
+- Verify MongoDB is listening on default port 27017
+
+### Port Already in Use
+- Frontend port conflict: Change port in `fe/package.json` or use `PORT=3002 npm run dev`
+- Backend port conflict: Update `PORT` in `be/.env`
+
+### CORS Errors
+- Ensure backend CORS configuration includes your frontend URL
+- Check `be/util/cors.config.js` for allowed origins
+- For development, frontend should be on `http://localhost:3001`
+
+### Socket.io Connection Issues
+- Verify WebSocket URL matches backend URL
+- Check firewall settings for WebSocket connections
+- Ensure `NEXT_PUBLIC_WS_URL` is correctly set in frontend `.env`
+
+### Image Upload Failures
+- Check `be/uploads/` directory exists and has write permissions
+- For AWS S3: Verify AWS credentials in backend `.env`
+- Maximum file size is 5MB per image
 
 ## 📊 Development Workflow
 

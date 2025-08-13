@@ -357,13 +357,14 @@ const verifyLink = async (req, res) => {
         .json(response(responseStatus.fail, transValidation.user_not_exist));
     }
 
-    if (user.status === true) {
+    // Check if user is already active (handle both boolean and string types)
+    if (user.status === true || user.status === 'true') {
       return res
         .status(400)
         .json(response(responseStatus.fail, transValidation.active_account));
     }
 
-    user.status = true;
+    user.status = true; // Ensure boolean true for consistency
     await user.save();
 
     return res
@@ -391,7 +392,8 @@ const resendVerify = async (req, res) => {
       .json(response(responseStatus.fail, transValidation.account_notfound));
   }
 
-  if (user.status === true) {
+  // Check if user is already active (handle both boolean and string types)
+  if (user.status === true || user.status === 'true') {
     return res
       .status(200)
       .json(response(responseStatus.fail, transValidation.active_account));
