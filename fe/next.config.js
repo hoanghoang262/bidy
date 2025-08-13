@@ -1,8 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Basic configuration only
+  // Output configuration for deployment
+  output: "standalone",
+  
+  // Transpile packages for compatibility
+  transpilePackages: ["@radix-ui/*"],
+  
+  // Experimental features for performance
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+    optimizeCss: true,
+    optimizeServerReact: true,
+  },
+  
+  // Image optimization with security
   images: {
-    domains: ['localhost'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 31536000, // 1 year cache
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'http',
@@ -10,7 +26,147 @@ const nextConfig = {
         port: '8000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost', 
+        port: '8001',
+        pathname: '/uploads/**',
+      },
+      // Add your production domains here
+      // {
+      //   protocol: 'https',
+      //   hostname: 'yourdomain.com',
+      //   pathname: '/uploads/**',
+      // },
     ],
+  },
+  
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    // Fix 'self is not defined' error in server-side rendering
+    if (isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'self': false,
+      };
+      
+      // Polyfill self for server-side rendering
+      const webpack = require('webpack');
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.ProvidePlugin({
+          self: false,
+        }),
+        new webpack.DefinePlugin({
+          'typeof self': JSON.stringify('undefined'),
+          'self': 'undefined',
+        })
+      );
+    }
+    
+    // Optimize for faster initial loading with aggressive code splitting
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        minSize: 20000, // Smaller chunks
+        maxSize: 244000, // Limit chunk size
+        cacheGroups: {
+          // Framework code
+          framework: {
+            test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+            name: 'framework',
+            priority: 40,
+            chunks: 'all',
+            enforce: true,
+          },
+          // Libraries
+          lib: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'lib',
+            priority: 30,
+            chunks: 'all',
+            minChunks: 2,
+          },
+          // Shared components
+          commons: {
+            name: 'commons',
+            minChunks: 2,
+            priority: 20,
+            reuseExistingChunk: true,
+          },
+          // UI components - separate for better caching
+          ui: {
+            test: /[\\/]src[\\/]components[\\/]ui[\\/]/,
+            name: 'ui',
+            priority: 25,
+            chunks: 'all',
+          },
+          // Admin components - lazy load only when needed
+          admin: {
+            test: /[\\/]src[\\/]app[\\/]admin[\\/]/,
+            name: 'admin',
+            priority: 10,
+            chunks: 'async', // Only load when needed
+          },
+        },
+      },
+    };
+    
+    return config;
+  },
+  
+  // Compiler optimizations
+  compiler: {
+    // Remove console.log in production
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+      // Cache static assets
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache fonts
+      {
+        source: '/fonts/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
 };
 

@@ -5,5 +5,7 @@ node_modules/
 fe/build_output.txt
 fe/.next
 
+.env
+
 # Large files
 be/uploads
