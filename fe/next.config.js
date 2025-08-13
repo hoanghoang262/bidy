@@ -24,12 +24,36 @@ const nextConfig = {
         port: '8001',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'http',
+        hostname: '123.30.238.194',
+        port: '8001',
+        pathname: '/uploads/**',
+      },
     ],
   },
   
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Production optimizations
+  poweredByHeader: false,
+  reactStrictMode: true,
+  
+  // Handle hydration issues in production
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Suppress hydration warnings for browser extension injected content
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
 };
 

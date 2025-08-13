@@ -27,7 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased overflow-x-hidden`}>
+      <body 
+        className={`${inter.variable} antialiased overflow-x-hidden`}
+        suppressHydrationWarning
+      >
         <PageErrorBoundary>
           <Provider>
             <Header />
