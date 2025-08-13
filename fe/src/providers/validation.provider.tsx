@@ -75,8 +75,18 @@ export default function ValidationProvider({ children }: PropsWithChildren) {
           <div className="text-red-500 text-4xl mb-4">⚠️</div>
           <h1 className="text-xl font-semibold text-red-800 mb-4">Configuration Error</h1>
           <p className="text-red-600 mb-4">
-            The application is not properly configured. Please contact support.
+            Configuration validation failed. Please check the following errors:
           </p>
+          <div className="mb-4 p-3 bg-red-100 rounded-md text-left">
+            <ul className="text-sm text-red-700 space-y-1">
+              {validationState.errors.map((error, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  <span>{error}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <details className="text-left">
             <summary className="cursor-pointer text-red-700 font-medium">Error Details</summary>
             <ul className="mt-2 text-sm text-red-600">
