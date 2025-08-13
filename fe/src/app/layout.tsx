@@ -6,6 +6,7 @@ import { Header, Footer } from "../components/layout";
 import Provider from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { PreloadManager } from "@/components/common/preload-manager";
+import { PageErrorBoundary } from "@/components/common/error-boundary";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,13 +28,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased overflow-x-hidden`}>
-        <Provider>
-          <Header />
-          {children}
-          <Footer />
-          <Toaster />
-          <PreloadManager />
-        </Provider>
+        <PageErrorBoundary>
+          <Provider>
+            <Header />
+            {children}
+            <Footer />
+            <Toaster />
+            <PreloadManager />
+          </Provider>
+        </PageErrorBoundary>
       </body>
     </html>
   );
