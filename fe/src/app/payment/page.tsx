@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Image from "next/image";
 import { SiMastercard, SiVisa } from "@icons-pack/react-simple-icons";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks';
 import { toast } from 'sonner';
 import logger from '@/utils/logger';
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
   const amount = searchParams.get("amount");
@@ -255,5 +255,30 @@ export default function PaymentPage() {
         )}
       </div>
     </main>
+  );
+}
+
+// Loading fallback for payment page
+const PaymentLoading = () => (
+  <main className="min-h-screen bg-background">
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center mb-6">
+        <div className="h-8 bg-muted rounded w-48 mx-auto mb-2 animate-pulse"></div>
+        <div className="h-4 bg-muted rounded w-64 mx-auto animate-pulse"></div>
+      </div>
+      <div className="space-y-6">
+        <div className="h-32 bg-muted rounded animate-pulse"></div>
+        <div className="h-64 bg-muted rounded animate-pulse"></div>
+        <div className="h-12 bg-muted rounded animate-pulse"></div>
+      </div>
+    </div>
+  </main>
+);
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<PaymentLoading />}>
+      <PaymentContent />
+    </Suspense>
   );
 }

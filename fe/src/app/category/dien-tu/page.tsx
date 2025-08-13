@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { SidebarFilter, ProductList } from "../../../components/product";
 import { useFilterState } from "../../../hooks";
 import { useRouter } from "next/navigation";
@@ -227,6 +227,31 @@ function ElectronicsCategoryContent() {
   );
 }
 
+// Loading fallback for electronics category page
+const ElectronicsCategoryLoading = () => (
+  <main className="flex-1 w-full px-4 py-8 pb-60 lg:px-24 flex flex-col gap-4 bg-gradient-to-b from-card to-accent-foreground">
+    <div className="flex flex-col lg:flex-row w-full justify-between gap-4">
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-10 bg-muted rounded animate-pulse"></div>
+        <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
+      </div>
+      <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+    </div>
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-start">
+      <div className="w-full lg:w-80 h-96 bg-muted rounded animate-pulse"></div>
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-64 bg-muted rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  </main>
+);
+
 export default function ElectronicsCategoryPage() {
-  return <ElectronicsCategoryContent />;
+  return (
+    <Suspense fallback={<ElectronicsCategoryLoading />}>
+      <ElectronicsCategoryContent />
+    </Suspense>
+  );
 }

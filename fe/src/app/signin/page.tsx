@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { redirect, useSearchParams } from "next/navigation";
 import { LocalUser } from "../../utils/localAuth";
@@ -156,6 +156,27 @@ function SignInContent() {
 
 // Removed unused SignInFallback component
 
+// Loading fallback for signin page
+const SignInLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8 border border-border">
+      <div className="text-center mb-6">
+        <div className="h-8 bg-muted rounded w-48 mx-auto mb-2 animate-pulse"></div>
+        <div className="h-4 bg-muted rounded w-32 mx-auto animate-pulse"></div>
+      </div>
+      <div className="space-y-4">
+        <div className="h-10 bg-muted rounded animate-pulse"></div>
+        <div className="h-10 bg-muted rounded animate-pulse"></div>
+        <div className="h-12 bg-muted rounded animate-pulse"></div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function SignInPage() {
-  return <SignInContent />;
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInContent />
+    </Suspense>
+  );
 }

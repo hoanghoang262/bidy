@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import { Header, Footer } from "../components/layout";
-// Removed Suspense - all components load immediately for faster navigation
 import Provider from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { PreloadManager } from "@/components/common/preload-manager";
 import { PageErrorBoundary } from "@/components/common/error-boundary";
+import { SearchParamsWrapper } from "@/components/common/SearchParamsWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,7 +33,9 @@ export default function RootLayout({
       >
         <PageErrorBoundary>
           <Provider>
-            <Header />
+            <SearchParamsWrapper>
+              <Header />
+            </SearchParamsWrapper>
             {children}
             <Footer />
             <Toaster />
