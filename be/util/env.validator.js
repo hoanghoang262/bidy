@@ -25,7 +25,6 @@ const ENV_CONFIG = {
 
   // Recommended for production
   recommendedForProduction: [
-    'SERVER_URL_PROD',
     'ACCESS_KEY_ID',
     'SECRET_ACCESS_KEY',
   ],
@@ -89,7 +88,6 @@ const validationRules = {
   'PORT': validators.port,
   'CLIENT_URL': validators.url,
   'SERVER_URL': validators.url,
-  'SERVER_URL_PROD': validators.url,
   'PAGE_NUMBER': validators.number,
   'LIMIT_NUMBER': validators.number,
   'ADMIN_LIMIT_NUMBER': validators.number,
@@ -288,7 +286,6 @@ const getValidationMessage = (envVar) => {
     'PORT': 'must be a valid port number (1-65535)',
     'CLIENT_URL': 'must be a valid URL',
     'SERVER_URL': 'must be a valid URL',
-    'SERVER_URL_PROD': 'must be a valid URL',
     'PAGE_NUMBER': 'must be a positive number',
     'LIMIT_NUMBER': 'must be a positive number',
     'ADMIN_LIMIT_NUMBER': 'must be a positive number',
@@ -318,7 +315,6 @@ const displayEnvironmentSummary = () => {
 
   console.log(chalk.cyan('\nServer Configuration:'));
   console.log(`  Server URL: ${process.env.SERVER_URL || 'not set'}`);
-  console.log(`  Production URL: ${process.env.SERVER_URL_PROD || 'not set'}`);
 
   console.log(chalk.cyan('\nPagination Settings:'));
   console.log(`  Page Number: ${process.env.PAGE_NUMBER || '1 (default)'}`);
