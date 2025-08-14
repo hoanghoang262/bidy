@@ -24,7 +24,10 @@ interface ProductCTAProps {
   currentUser?: User | null;
   currentUserId?: string;
   buyNowPrice?: number;
-  auctionOwner?: any;
+  auctionOwner?: {
+    _id: string;
+    [key: string]: unknown;
+  };
 }
 
 export default function ProductCTA({

@@ -74,7 +74,7 @@ export default function BuyNowSuccessModal({
           </h2>
           
           <p className="text-gray-600">
-            Bạn đã mua thành công sản phẩm <strong>"{productName}"</strong> với giá{" "}
+            Bạn đã mua thành công sản phẩm <strong>&ldquo;{productName}&rdquo;</strong> với giá{" "}
             <strong className="text-green-600">
               {amount.toLocaleString("vi-VN")} VNĐ
             </strong>

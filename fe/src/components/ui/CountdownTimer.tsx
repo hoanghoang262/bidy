@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface AuctionState {
   state: "upcoming" | "happening" | "ended";
@@ -30,7 +30,7 @@ export default function CountdownTimer({
   });
 
   // Calculate auction state and time remaining
-  const calculateAuctionState = (): AuctionState => {
+  const calculateAuctionState = useCallback((): AuctionState => {
     const now = new Date().getTime();
     const start = new Date(startDate).getTime();
     const end = new Date(finishedTime).getTime();
@@ -81,7 +81,7 @@ export default function CountdownTimer({
         progress: 100,
       };
     }
-  };
+  }, [startDate, finishedTime]);
 
   // Format milliseconds into readable time string
   const formatTimeRemaining = (milliseconds: number): string => {
@@ -165,7 +165,7 @@ export default function CountdownTimer({
 
     // Cleanup on unmount
     return () => clearInterval(interval);
-  }, [startDate, finishedTime, onStateChange]);
+  }, [startDate, finishedTime, onStateChange, calculateAuctionState]);
 
   const colors = getStateColors(auctionState);
 
