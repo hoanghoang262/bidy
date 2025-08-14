@@ -13,6 +13,7 @@ import logger from "@/utils/logger";
 import axiosClient from "@/lib/axios-client";
 import { TopOwnership } from "@/types/bid";
 import { User } from "@/types/user";
+import BuyNowSuccessModal from "@/components/ui/BuyNowSuccessModal";
 
 interface ProductCTAProps {
   currentPrice: number;
@@ -23,6 +24,7 @@ interface ProductCTAProps {
   currentUser?: User | null;
   currentUserId?: string;
   buyNowPrice?: number;
+  auctionOwner?: any;
 }
 
 export default function ProductCTA({
@@ -35,6 +37,7 @@ export default function ProductCTA({
   productName,
   currentUserId,
   buyNowPrice = 0,
+  auctionOwner,
 }: ProductCTAProps & { productName?: string }) {
   const [bidInput, setBidInput] = useState("");
   const [bidError, setBidError] = useState("");
@@ -42,7 +45,16 @@ export default function ProductCTA({
   const [autoLimit, setAutoLimit] = useState("");
   const [hasPaid, setHasPaid] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(true);
+  const [showBuyNowModal, setShowBuyNowModal] = useState(false);
   const { user } = useAuth();
+
+  // Check if current user is the auction owner
+  const isAuctionOwner = auctionOwner && currentUserId && String(auctionOwner._id) === String(currentUserId);
+  logger.debug('ProductCTA owner check', { 
+    isAuctionOwner, 
+    auctionOwnerId: auctionOwner?._id, 
+    currentUserId: String(currentUserId)
+  });
 
   // Determine winner for ended products
   const sortedOwnerships = [...(topOwnerships || [])].sort((a, b) => b.amount - a.amount);
@@ -126,6 +138,20 @@ export default function ProductCTA({
     }
   }
 
+  // Show owner message for auction owners
+  if (isAuctionOwner) {
+    return (
+      <div className="flex flex-col items-center w-full mt-4">
+        <div className="w-full max-w-3xl h-12 rounded-full bg-blue-500 text-white font-bold text-lg flex items-center justify-center">
+          Đây là sản phẩm của bạn
+        </div>
+        <div className="text-xs text-foreground-secondary mt-2 text-center">
+          Bạn không thể đấu giá sản phẩm của chính mình
+        </div>
+      </div>
+    );
+  }
+
   const handleBidSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -164,8 +190,11 @@ export default function ProductCTA({
         })
         .catch((error) => {
           logger.error('Bid placement failed', error, { userId: user._id, productId, bidAmount });
-          setBidError("Đặt giá thất bại. Vui lòng thử lại.");
-          toast.error("Đặt giá thất bại. Vui lòng thử lại.");
+          
+          // Extract error message from backend response
+          const errorMessage = error?.response?.data?.message || "Đặt giá thất bại. Vui lòng thử lại.";
+          setBidError(errorMessage);
+          toast.error(errorMessage);
         });
     }
   };
@@ -179,7 +208,8 @@ export default function ProductCTA({
     if (productId) {
       fetchBuyNow(productId.toString())
         .then(() => {
-          toast.success("Mua nhanh thành công!");
+          // Show success modal instead of toast
+          setShowBuyNowModal(true);
           if (refetchProduct) refetchProduct();
         })
         .catch(() => {
@@ -219,7 +249,8 @@ export default function ProductCTA({
   };
 
   return (
-    <form className="flex flex-col gap-4 w-full" onSubmit={handleBidSubmit}>
+    <>
+      <form className="flex flex-col gap-4 w-full" onSubmit={handleBidSubmit}>
       {/* Manual Bid Row */}
       <div className="w-full grid grid-cols-3 md:flex-row gap-4 md:gap-8 items-center border-b border-border pb-4">
         <button
@@ -269,6 +300,16 @@ export default function ProductCTA({
           Đấu giá tự động
         </button>
       </div>
-    </form>
+      </form>
+
+      {/* Buy Now Success Modal */}
+      <BuyNowSuccessModal
+        isOpen={showBuyNowModal}
+        onClose={() => setShowBuyNowModal(false)}
+        productName={productName || "Sản phẩm"}
+        productId={productId?.toString() || ""}
+        amount={buyNowPrice}
+      />
+    </>
   );
 }

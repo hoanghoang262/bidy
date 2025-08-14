@@ -7,6 +7,7 @@ import { createAuctionListing } from '@/services/product/product.fetcher';
 import { toast } from 'sonner';
 import { useProductCategories } from '@/services/product/product.query';
 import logger from '@/utils/logger';
+import DateTimePicker from '@/components/ui/DateTimePicker';
 
 // Define proper types
 interface Category {
@@ -26,6 +27,25 @@ interface ApiError {
 
 
 
+// Helper function to get default start time (5 minutes from now for safety)
+const getDefaultStartTime = () => {
+  const now = new Date();
+  const fiveMinutesLater = new Date(now.getTime() + 5 * 60 * 1000);
+  return fiveMinutesLater.toISOString().slice(0, 19); // Include seconds
+};
+
+// Helper function to get minutes for preset IDs
+const getPresetMinutes = (presetId: string): number => {
+  const presetMap: { [key: string]: number } = {
+    'NOW': 3,        // 3 minutes buffer for "Ngay bây giờ"
+    'FIVE_MIN': 5,   // 5 minutes
+    'TEN_MIN': 10,   // 10 minutes  
+    'THIRTY_MIN': 30, // 30 minutes
+    'ONE_HOUR': 60,  // 1 hour
+  };
+  return presetMap[presetId] || 5; // Default to 5 minutes if not found
+};
+
 const initialForm = {
   name: "",
   description: "",
@@ -33,7 +53,8 @@ const initialForm = {
   price: "",
   priceBuyNow: "",
   category: "",
-  time_remain: "1",
+  durationDays: "1",
+  startDate: getDefaultStartTime(),
   image: null as File | null,
 };
 
@@ -57,7 +78,7 @@ export default function NewProductPage() {
         setForm((f) => ({ ...f, image: files[0] }));
         setImagePreview(URL.createObjectURL(files[0]));
       }
-    } else if (name === "quantity" || name === "time_remain") {
+    } else if (name === "quantity" || name === "durationDays") {
       setForm((f) => ({ ...f, [name]: value.replace(/\D/g, "") }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
@@ -66,8 +87,42 @@ export default function NewProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.description || !form.image || !form.price || !form.category || !form.time_remain) {
+    if (!form.name || !form.description || !form.image || !form.price || !form.category || !form.startDate || !form.durationDays) {
       toast.error('Vui lòng điền đầy đủ thông tin bắt buộc.');
+      return;
+    }
+
+    // Calculate actual startDate - handle preset values dynamically
+    let actualStartDate: Date;
+    const now = new Date();
+    
+    if (form.startDate.startsWith('PRESET:')) {
+      const presetId = form.startDate.replace('PRESET:', '');
+      const bufferMinutes = getPresetMinutes(presetId);
+      actualStartDate = new Date(now.getTime() + bufferMinutes * 60 * 1000);
+      console.log(`🕐 Dynamic calculation: ${presetId} -> ${actualStartDate.toISOString()}`);
+    } else {
+      actualStartDate = new Date(form.startDate);
+    }
+
+    const startDate = actualStartDate; // For backward compatibility
+    const durationDays = parseInt(form.durationDays);
+
+    // Skip validation for preset values (they are always safe)
+    if (!form.startDate.startsWith('PRESET:')) {
+      // Only validate custom datetime selections
+      const timeDiffSeconds = (startDate.getTime() - now.getTime()) / 1000;
+      const minBufferSeconds = 60; // 1 minute buffer
+      
+      if (timeDiffSeconds < minBufferSeconds) {
+        const remainingMinutes = Math.ceil((minBufferSeconds - timeDiffSeconds) / 60);
+        toast.error(`Thời gian bắt đầu phải ít nhất ${remainingMinutes} phút nữa để đảm bảo đầu giá thành công.`);
+        return;
+      }
+    }
+
+    if (!durationDays || durationDays < 1) {
+      toast.error('Thời gian đấu giá phải từ 1 ngày trở lên.');
       return;
     }
 
@@ -82,7 +137,8 @@ export default function NewProductPage() {
       formData.append('price', form.price);
       if (form.priceBuyNow) formData.append('priceBuyNow', form.priceBuyNow);
       formData.append('category', form.category);
-      formData.append('time_remain', form.time_remain);
+      formData.append('durationDays', form.durationDays);
+      formData.append('startDate', actualStartDate.toISOString());
       if (form.image) formData.append('images', form.image); // Send file directly
       
       // // Debug: Log form data
@@ -227,16 +283,30 @@ export default function NewProductPage() {
               )}
             </select>
           </div>
+          {/* Thời gian bắt đầu */}
+          <DateTimePicker
+            value={form.startDate}
+            onChange={(value, presetType) => {
+              setForm((f) => ({ ...f, startDate: value }));
+              // Optional: Handle presetType if needed for additional logic
+              if (presetType) {
+                console.log('🕰️ Preset selected:', presetType);
+              }
+            }}
+            label="Thời Gian Bắt Đầu"
+            required
+          />
+          
           {/* Thời gian đấu giá (ngày) */}
           <div>
             <label className="font-semibold text-foreground">
               Thời Gian Đấu Giá (ngày) <span className="text-primary">*</span>
             </label>
             <input
-              name="time_remain"
+              name="durationDays"
               type="number"
               min={1}
-              value={form.time_remain}
+              value={form.durationDays}
               onChange={handleChange}
               required
               placeholder="1"

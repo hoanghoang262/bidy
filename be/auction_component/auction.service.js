@@ -294,6 +294,52 @@ const getMonthlyAuctionStats = async (yearParam) => {
   return fullStats;
 };
 
+// Process auction lifecycle - handle start and end events
+const processAuctionLifecycle = async () => {
+  const now = new Date();
+  
+  try {
+    // Start upcoming auctions that have reached their startDate
+    // Find all auctions that should be happening now
+    const upcomingAuctions = await Auction.find({
+      startDate: { $lte: now },
+      finishedTime: { $gt: now },
+      status: 'upcoming' // Only update auctions with 'upcoming' status
+    });
+
+    if (upcomingAuctions.length > 0) {
+      await Auction.updateMany(
+        {
+          startDate: { $lte: now },
+          finishedTime: { $gt: now },
+          status: 'upcoming'
+        },
+        { $set: { status: 'happenning' } }
+      );
+      console.log(`⚡️[Cron]: Started ${upcomingAuctions.length} auctions (upcoming → happenning)`);
+      for (const auction of upcomingAuctions) {
+        console.log(`  → "${auction.name}" is now happening`);
+      }
+    }
+
+    // End auctions that have passed their finishedTime
+    const expiredAuctions = await Auction.find({
+      finishedTime: { $lte: now },
+      status: 'happenning'
+    });
+
+    for (const auction of expiredAuctions) {
+      await eventBidEnd(auction._id);
+    }
+
+    if (expiredAuctions.length > 0) {
+      console.log(`⚡️[Cron]: Ended ${expiredAuctions.length} auctions`);
+    }
+  } catch (error) {
+    console.error('❌[Cron]: Error in auction lifecycle processing:', error.message);
+  }
+};
+
 const activeAutoBid = async () => {
   const auctions = await Auction.find({
     status: 'happenning',
@@ -497,41 +543,115 @@ const updateBid = async (id, OwnershipData) => {
 
 const auctionBid = async (id, idUser, amount) => {
   try {
-    const data = await Auction.findOne({ _id: id });
-    if (!data) {
-      return;
+    logger.info('Processing bid in service', { auctionId: id, userId: idUser, amount });
+
+    // Find auction
+    const auction = await Auction.findOne({ _id: id });
+    if (!auction) {
+      logger.warn('Auction not found', { auctionId: id, userId: idUser });
+      return { error: 'Phiên đấu giá không tồn tại.' };
     }
 
-    if (data.owner.toString() === idUser) {
-      return;
+    // Check if user is the auction owner
+    if (auction.owner.toString() === idUser) {
+      logger.warn('User cannot bid on their own auction', { auctionId: id, userId: idUser });
+      return { error: 'Bạn không thể đấu giá sản phẩm của chính mình.' };
     }
-    const currentTime = new Date();
-    const finishedTime = new Date(data.finishedTime);
-    const threeMinutesBefore = new Date(finishedTime.getTime() - 3 * 60 * 1000);
 
-    if (currentTime >= threeMinutesBefore) {
-      const updatedFinishedTime = new Date(
-        currentTime.getTime() + 3 * 60 * 1000,
-      );
+    // Check if auction is active
+    const now = new Date();
+    const startTime = new Date(auction.startDate);
+    const finishTime = new Date(auction.finishedTime);
+
+    if (now < startTime) {
+      logger.warn('Auction has not started yet', { auctionId: id, userId: idUser, startDate: startTime });
+      return { error: 'Phiên đấu giá chưa bắt đầu.' };
+    }
+
+    if (now > finishTime) {
+      logger.warn('Auction has already ended', { auctionId: id, userId: idUser, finishedTime: finishTime });
+      return { error: 'Phiên đấu giá đã kết thúc.' };
+    }
+
+    // Check minimum bid amount
+    const highestBid = auction.top_ownerships.length > 0
+      ? Math.max(...auction.top_ownerships.map(b => b.amount))
+      : parseInt(auction.price);
+
+    if (amount <= highestBid) {
+      logger.warn('Bid amount too low', {
+        auctionId: id,
+        userId: idUser,
+        bidAmount: amount,
+        currentHighest: highestBid,
+      });
+      return { error: `Giá đấu phải lớn hơn ${highestBid.toLocaleString('vi-VN')} VNĐ.` };
+    }
+
+    // Extend auction time if bid placed in last 3 minutes
+    const threeMinutesBefore = new Date(finishTime.getTime() - 3 * 60 * 1000);
+    if (now >= threeMinutesBefore) {
+      const updatedFinishedTime = new Date(now.getTime() + 3 * 60 * 1000);
       await Auction.updateOne(
         { _id: id },
         { status: 'happenning', finishedTime: updatedFinishedTime },
       );
+      logger.info('Auction time extended', { auctionId: id, newFinishTime: updatedFinishedTime });
     }
 
-    const topOwnerships = data.top_ownerships;
-    const userE = await User.findOne({ _id: idUser });
-    const OwnershipData = {
+    // Get user data
+    const user = await User.findOne({ _id: idUser });
+    if (!user) {
+      logger.error('User not found', { userId: idUser });
+      return null;
+    }
+
+    const bidData = {
       user_id: idUser,
-      user_name: userE.user_name,
+      user_name: user.user_name,
       amount: amount,
     };
 
-    return topOwnerships?.find((i) => i.user_id.toString() === idUser)
-      ? await updateBid(id, OwnershipData)
-      : await addBid(id, OwnershipData, true);
+    // Check if user already has a bid and update or add new bid
+    const existingBid = auction.top_ownerships?.find((bid) => bid.user_id.toString() === idUser);
+    let result;
+
+    if (existingBid) {
+      logger.info('Updating existing bid', { auctionId: id, userId: idUser, oldAmount: existingBid.amount, newAmount: amount });
+      result = await updateBid(id, bidData);
+    } else {
+      logger.info('Adding new bid', { auctionId: id, userId: idUser, amount });
+      result = await addBid(id, bidData, true);
+    }
+
+    if (result && result.modifiedCount > 0) {
+      logger.info('Bid processed successfully', { auctionId: id, userId: idUser, amount, operation: existingBid ? 'update' : 'add' });
+
+      // Return success response with updated auction data
+      const updatedAuction = await Auction.findOne({ _id: id }).populate([
+        {
+          path: 'top_ownerships.user_id',
+          select: 'full_name _id user_name',
+        },
+        {
+          path: 'owner',
+          select: 'full_name _id',
+        },
+      ]);
+
+      return {
+        success: true,
+        message: 'Bid placed successfully',
+        auction: updatedAuction,
+        bidAmount: amount,
+      };
+    } else {
+      logger.error('Database update failed', { auctionId: id, userId: idUser, result });
+      return null;
+    }
   } catch (error) {
-    logger.error('Service error', error);
+    logger.error('Error in auctionBid service', error, { auctionId: id, userId: idUser, amount });
+    return null;
   }
 };
 
@@ -685,11 +805,23 @@ const listingAuction = async (product, user_id) => {
       price: product.price,
       priceBuyNow: product.priceBuyNow,
       category: product.category,
-      time_remain: product.time_remain,
+      durationDays: product.durationDays,
       description: product.description,
+      startDate: product.startDate || new Date(), // Use provided startDate or default to now
       finishedTime: product.finishedTime,
       image: keyImages,
-      status: 'happenning',
+      // Determine initial status based on startDate
+      status: (() => {
+        const now = new Date();
+        const start = new Date(product.startDate);
+        if (start > now) {
+          console.log(`🕐 Auction "${product.name}" created with status: upcoming (starts at ${start.toISOString()})`);
+          return 'upcoming';
+        } else {
+          console.log(`✅ Auction "${product.name}" created with status: happenning (already started)`);
+          return 'happenning';
+        }
+      })(),
     });
 
     logger.debug('Saving auction to database', { productName: product.name, userId: user_id });
@@ -841,4 +973,5 @@ module.exports = {
   getAuctionUserBought,
   getAuctionUserSold,
   getMonthlyAuctionStats,
+  processAuctionLifecycle,
 };

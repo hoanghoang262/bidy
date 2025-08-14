@@ -18,6 +18,7 @@ import type { Bid } from "./components/ProductBidList";
 import type { TopOwnership } from "@/types/bid";
 import { useAuth } from "@/hooks";
 import logger from "@/utils/logger";
+import CountdownTimer from "@/components/ui/CountdownTimer";
 
 const PRODUCT_CATEGORY = "Đồ điện tử";
 const PRODUCT_BRAND = "Apple"; // Placeholder, ideally from data
@@ -98,6 +99,7 @@ export default function Page({
     category: apiProduct.category || undefined,
     status: apiProduct.status as STATUS_AUCTIONS || STATUS_AUCTIONS.INITIAL,
     type: apiProduct.status as STATUS_AUCTIONS || STATUS_AUCTIONS.INITIAL,
+    startDate: apiProduct.startDate || undefined,
     createdAt: apiProduct.createdAt || undefined,
     updatedAt: apiProduct.updatedAt || undefined,
   };
@@ -163,6 +165,18 @@ export default function Page({
                 />
               </div>
             </div>
+            
+            {/* Countdown Timer Section */}
+            {(product.startDate && product.endTime) && (
+              <div className="w-full">
+                <CountdownTimer
+                  startDate={product.startDate}
+                  finishedTime={product.endTime}
+                  className="w-full max-w-lg mx-auto"
+                />
+              </div>
+            )}
+            
             {/* CTA Section - conditional by product.type */}
             {(product.type !== STATUS_AUCTIONS.INITIAL) && (
               <ProductCTA
@@ -175,6 +189,7 @@ export default function Page({
                 currentUserId={currentUser?._id || ""}
                 productName={product.name}
                 buyNowPrice={parseFloat(product.buyNow || "0")}
+                auctionOwner={apiProduct.owner}
               />
             )}
             {product.type === STATUS_AUCTIONS.ENDED && (

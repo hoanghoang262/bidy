@@ -10,7 +10,7 @@ const bidSchema = new Schema(
 			ref: 'User',
 			required: true,
 		},
-		time_remain: {
+		durationDays: {
 			type: String,
 		},
 		quantity: {
@@ -28,6 +28,10 @@ const bidSchema = new Schema(
 			type: Schema.Types.ObjectId,
 			ref: 'Category',
 			required: true,
+		},
+		startDate: {
+			type: Date,
+			default: Date.now,
 		},
 		finishedTime: {
 			type: Date,
@@ -74,6 +78,7 @@ const bidSchema = new Schema(
 bidSchema.index({ owner: 1 }); // For getUserAuctionByStatus, getMyAuction
 bidSchema.index({ category: 1 }); // For getProductByCategory
 bidSchema.index({ status: 1 }); // For getAuctionByStatus
+bidSchema.index({ startDate: 1 }); // For cron job processing and upcoming auctions
 bidSchema.index({ finishedTime: 1 }); // For cron job processing and ended auctions
 bidSchema.index({ hasActiveAutoBid: 1 }); // For auto-bid processing
 bidSchema.index({ name: 'text' }); // For text search on auction names

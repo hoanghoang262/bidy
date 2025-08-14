@@ -17,7 +17,7 @@ export enum APP_CONSTANTS {
 }
 
 export enum STATUS_AUCTIONS {
-  INITIAL = "initial",
-  HAPPENING = "happenning",
+  INITIAL = "upcoming",  // Backend uses "upcoming" for auctions that haven't started
+  HAPPENING = "happenning", // Backend uses "happenning" (double n)
   ENDED = "ended",
 }

@@ -6,6 +6,10 @@ const startCronJob = () => {
 	// This is sufficient for auction bid processing and reduces server load significantly
 	const job = cron.schedule('0 * * * * *', async () => {
 		try {
+			// Handle auction lifecycle (start upcoming auctions, end finished ones)
+			await auctionService.processAuctionLifecycle();
+			
+			// Process auto bids for active auctions
 			const result = await auctionService.activeAutoBid();
 			if (result === 'stop') {
 				// Cron job stopped

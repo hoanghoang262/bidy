@@ -258,21 +258,64 @@ const updateProduct = async (req, res) => {
 };
 
 const auctionBid = async (req, res) => {
-  const id = req.params.id;
-  const amount = req.body.amount;
+  try {
+    const id = req.params.id;
+    const amount = req.body.amount;
 
-  const status = await auctionService.auctionBid(id, req.idUser, amount, res);
-  if (!status) {
+    logger.info('Bid request received', { 
+      auctionId: id, 
+      userId: req.idUser, 
+      amount,
+      timestamp: new Date().toISOString()
+    });
+
+    // Validate input
+    if (!id || !amount || amount <= 0) {
+      logger.warn('Invalid bid parameters', { auctionId: id, amount, userId: req.idUser });
+      return res
+        .status(400)
+        .json(response(responseStatus.fail, 'Invalid bid parameters'));
+    }
+
+    const status = await auctionService.auctionBid(id, req.idUser, amount);
+    
+    if (!status) {
+      logger.warn('Bid service returned null', { auctionId: id, userId: req.idUser, amount });
+      return res
+        .status(400)
+        .json(response(responseStatus.fail, 'Không thể đặt giá. Vui lòng kiểm tra lại thông tin.'));
+    }
+
+    if (status.error) {
+      logger.warn('Bid service returned error', { auctionId: id, userId: req.idUser, amount, error: status.error });
+      return res
+        .status(400)
+        .json(response(responseStatus.fail, status.error));
+    }
+
+    logger.info('Bid placed successfully', { 
+      auctionId: id, 
+      userId: req.idUser, 
+      amount,
+      result: status 
+    });
+
+    startCronJob();
     return res
-      .status(400)
-      .json(response(responseStatus.fail, transValidation.bad_request));
+      .status(200)
+      .json(
+        response(responseStatus.success, transValidation.input_correct, status),
+      );
+  } catch (error) {
+    logger.error('Error in auctionBid controller', error, { 
+      auctionId: req.params.id, 
+      userId: req.idUser, 
+      amount: req.body.amount 
+    });
+    return res
+      .status(500)
+      .json(response(responseStatus.fail, transValidation.server_error));
   }
-  startCronJob();
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.input_correct, status),
-    );
 };
 
 const buyNow = async (req, res) => {
@@ -388,20 +431,21 @@ const listingAuction = async (req, res) => {
         );
     }
 
+    const startDate = req.body.startDate ? new Date(req.body.startDate) : new Date();
+    const durationDays = parseInt(req.body.durationDays) || 1;
+    const finishedTime = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
     const product = {
       name: req.body.name,
       quantity: req.body.quantity,
       price: req.body.price,
       priceBuyNow: req.body.priceBuyNow,
       category: req.body.category,
-      time_remain: req.body.time_remain,
+      durationDays: req.body.durationDays,
       description: req.body.description,
       image: files,
-      finishedTime: new Date(
-        Date.now() + req.body.time_remain * 24 * 60 * 60 * 1000,
-      ),
-      // o tren la theo ngay, con theo giay * 10
-      // finishedTime: new Date(Date.now() + req.body.time_remain * 10 * 1000),
+      startDate: startDate,
+      finishedTime: finishedTime,
     };
 
     logger.debug('Product object created for auction', { productName: product.name, userId: req.idUser });

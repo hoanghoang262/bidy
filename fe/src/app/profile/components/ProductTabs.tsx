@@ -63,7 +63,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({
           }`}
           onClick={() => setProductTab(STATUS_AUCTIONS.INITIAL)}
         >
-          Sắp đấu giá
+          Sắp bắt đầu
         </button>
       </div>
     );

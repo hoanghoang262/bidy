@@ -79,3 +79,4 @@ Backend requires:
 - Swagger documentation available at `/api-docs` endpoint
 - File uploads stored in `/be/uploads/` directory
 - Cron job runs every second for auction state management
+- dont change env if i not command
