@@ -92,7 +92,6 @@ export default function FeatureCard({
         {/* CTA */}
         <button
           className="w-full bg-primary text-primary-foreground rounded-lg py-2 font-semibold flex items-center justify-center gap-2 mt-2 hover:bg-primary/80 transition-colors"
-          onClick={(e) => e.preventDefault()}
         >
           {feature.type === STATUS_AUCTIONS.HAPPENING
             ? "Tham Gia Đấu Giá"

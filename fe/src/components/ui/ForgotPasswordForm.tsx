@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForgotPassword } from "@/services/user";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ResponsiveInput from "@/components/ui/ResponsiveInput";
 
 interface ForgotPasswordFormProps {
   onBackToSignIn?: () => void;
@@ -66,16 +68,16 @@ export default function ForgotPasswordForm({
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-lg p-8 flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 items-center text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-primary mb-2">
+            <h2 className="text-xl font-bold text-primary mb-2">
               Email đã được gửi!
-            </h1>
-            <p className="text-foreground-secondary text-sm leading-relaxed">
+            </h2>
+            <p className="text-foreground-secondary text-sm sm:text-base leading-relaxed">
               Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến{" "}
               <strong>{email}</strong>. Vui lòng kiểm tra hộp thư và làm theo
               hướng dẫn.
@@ -126,45 +128,20 @@ export default function ForgotPasswordForm({
   }
 
   return (
-    <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-lg p-8 flex flex-col gap-6">
-      <div className="flex flex-col gap-1 items-center">
-        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-2">
-          <Mail className="w-6 h-6 text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-primary tracking-wider">
-          Quên mật khẩu?
-        </h1>
-        <p className="text-foreground-secondary text-sm text-center">
-          Nhập địa chỉ email của bạn để nhận hướng dẫn đặt lại mật khẩu
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="email" className="font-semibold text-foreground text-sm">
-            Địa chỉ Email <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              id="email"
-              type="email"
-              {...register("email")}
-              placeholder="Nhập địa chỉ email của bạn"
-              className={`w-full border rounded-lg px-4 py-3 pl-12 bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-foreground-secondary ${
-                errors.email ? "border-red-500" : "border-border"
-              }`}
-              autoComplete="email"
-              disabled={isLoading}
-            />
-            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground-secondary" />
-          </div>
-          {errors.email && (
-            <p className="text-red-500 text-xs flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              {errors.email.message}
-            </p>
-          )}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <ResponsiveInput
+          label="Địa chỉ Email"
+          type="email"
+          {...register("email")}
+          placeholder="Nhập địa chỉ email của bạn"
+          icon={<Mail className="w-4 h-4" />}
+          autoComplete="email"
+          disabled={isLoading}
+          error={errors.email?.message}
+          required
+        />
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -182,7 +159,7 @@ export default function ForgotPasswordForm({
         >
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <LoadingSpinner size="sm" color="white" />
               Đang gửi...
             </div>
           ) : (

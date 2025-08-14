@@ -8,55 +8,77 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const loginUser = async (req, res) => {
-  const { userName, password } = req.body;
+  try {
+    const { userName, password } = req.body;
 
-  const result = await userService.loginUser(userName, password);
-  if (!result) {
+    const result = await userService.loginUser(userName, password);
+    if (!result) {
+      return res
+        .status(401)
+        .json(response(responseStatus.fail, 'Tên đăng nhập hoặc mật khẩu không chính xác'));
+    }
+
+    return res
+      .status(200)
+      .json(
+        response(responseStatus.success, 'Đăng nhập thành công', result),
+      );
+  } catch (error) {
     return res
       .status(500)
-      .json(response(responseStatus.fail, transValidation.login_fail));
+      .json(response(responseStatus.fail, 'Lỗi hệ thống, vui lòng thử lại'));
   }
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.input_correct, result),
-    );
 };
 
 const register = async (req, res) => {
-  const userName = req.body.userName;
-  const password = req.body.password;
-  const full_name = req.body.fullName;
-  const email = req.body.email;
-  const identity = req.body.identity;
-  const phone = req.body.phone;
+  try {
+    const { userName, password, fullName: full_name, email, identity, phone } = req.body;
 
-  const status = await userService.register(
-    userName,
-    password,
-    full_name,
-    email,
-    identity,
-    phone,
-  );
-  if (!status) {
-    return res
-      .status(500)
-      .json(response(responseStatus.fail, transValidation.email_exist));
-  }
-  const verifyToken = await userService.sendVerifyLink(email);
-  if (!verifyToken) {
-    return res
-      .status(500)
-      .json(
-        response(responseStatus.fail, transValidation.send_verify_link_failed),
-      );
-  }
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.send_verify_link_success),
+    const result = await userService.register(
+      userName,
+      password,
+      full_name,
+      email,
+      identity,
+      phone,
     );
+
+    const verifyToken = await userService.sendVerifyLink(email);
+    if (!verifyToken) {
+      return res
+        .status(500)
+        .json(
+          response(responseStatus.fail, 'Không thể gửi email xác thực, vui lòng thử lại'),
+        );
+    }
+
+    return res
+      .status(201)
+      .json(
+        response(responseStatus.success, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản'),
+      );
+  } catch (error) {
+    let statusCode = 500;
+    let message = 'Lỗi hệ thống, vui lòng thử lại';
+
+    if (error.message === 'USERNAME_EXISTS') {
+      statusCode = 409;
+      message = 'Tên đăng nhập đã tồn tại';
+    } else if (error.message === 'EMAIL_EXISTS') {
+      statusCode = 409;
+      message = 'Email đã tồn tại';
+    } else if (error.message === 'IDENTITY_EXISTS') {
+      statusCode = 409;
+      message = 'CCCD đã tồn tại';
+    } else if (error.message === 'PHONE_EXISTS') {
+      statusCode = 409;
+      message = 'Số điện thoại đã tồn tại';
+    }
+
+    return res
+      .status(statusCode)
+      .json(response(responseStatus.fail, message));
+  }
 };
 
 const viewProfile = async (req, res) => {
@@ -189,17 +211,19 @@ const resetPassword = async (req, res, next) => {
 };
 
 const userList = async (req, res) => {
-  const data = await userService.userList();
-  if (!data) {
+  try {
+    const data = await userService.userList();
+
     return res
       .status(200)
-      .json(response(responseStatus.fail, transValidation.email_exist));
+      .json(
+        response(responseStatus.success, 'Lấy danh sách người dùng thành công', data),
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(response(responseStatus.fail, 'Lỗi hệ thống, vui lòng thử lại'));
   }
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.input_correct, data),
-    );
 };
 
 const wishlist = async (req, res) => {
@@ -244,45 +268,67 @@ const wishlist = async (req, res) => {
 };
 
 const addWishlist = async (req, res) => {
-  const { id } = req.params;
-  const data = await userService.addWishlist(req.idUser, id, res);
+  try {
+    const { id } = req.params;
+    const result = await userService.addWishlist(req.idUser, id);
 
-  if (data) {
     return res
-      .status(200)
+      .status(201)
       .json(
-        response(responseStatus.success, transValidation.input_correct, data),
+        response(responseStatus.success, 'Đã thêm vào danh sách yêu thích', result),
       );
+  } catch (error) {
+    let statusCode = 500;
+    let message = 'Lỗi hệ thống, vui lòng thử lại';
+
+    if (error.message === 'AUCTION_ALREADY_IN_WISHLIST') {
+      statusCode = 409;
+      message = 'Sản phẩm đã có trong danh sách yêu thích';
+    }
+
+    return res
+      .status(statusCode)
+      .json(response(responseStatus.fail, message));
   }
 };
 
 const removeWishlist = async (req, res) => {
-  const { id } = req.params;
-  const data = await userService.removeWishlist(req.idUser, id);
-  if (!data) {
+  try {
+    const { id } = req.params;
+    const result = await userService.removeWishlist(req.idUser, id);
+
+    if (!result.deletedCount) {
+      return res
+        .status(404)
+        .json(response(responseStatus.fail, 'Không tìm thấy sản phẩm trong danh sách yêu thích'));
+    }
+
     return res
-      .status(400)
-      .json(response(responseStatus.fail, transValidation.email_exist));
+      .status(200)
+      .json(
+        response(responseStatus.success, 'Đã xóa khỏi danh sách yêu thích', result),
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(response(responseStatus.fail, 'Lỗi hệ thống, vui lòng thử lại'));
   }
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.input_correct, data),
-    );
 };
 
 const removeAllWishlist = async (req, res) => {
-  const data = await userService.removeAllWishlist(req.idUser);
-  if (!data) {
+  try {
+    const result = await userService.removeAllWishlist(req.idUser);
+
     return res
-      .status(400)
-      .json(response(responseStatus.fail, transValidation.email_exist));
+      .status(200)
+      .json(
+        response(responseStatus.success, `Đã xóa ${result.deletedCount} sản phẩm khỏi danh sách yêu thích`, result),
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(response(responseStatus.fail, 'Lỗi hệ thống, vui lòng thử lại'));
   }
-  return res
-    .status(200)
-    .json(
-      response(responseStatus.success, transValidation.input_correct, data),
-    );
 };
 
 const checkUser = async (req, res) => {

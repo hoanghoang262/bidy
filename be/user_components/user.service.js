@@ -20,13 +20,13 @@ const loginUser = async (userName, password) => {
     user_name: userName?.toLowerCase(),
     $or: [
       { status: true },
-      { status: 'true' }
-    ]
+      { status: 'true' },
+    ],
   });
 
   if (user !== null) {
     let isPasswordValid = false;
-    
+
     // Check if password is already hashed (starts with $2b$ or similar)
     if (user.password.startsWith('$2') && user.password.includes('$')) {
       // Password is hashed, use bcrypt compare
@@ -35,7 +35,7 @@ const loginUser = async (userName, password) => {
       // Password is plain text (temporary backwards compatibility)
       // TODO: Remove this after all passwords are hashed
       isPasswordValid = (password === user.password);
-      
+
       // Auto-migrate: hash the plain text password
       if (isPasswordValid) {
         const hashedPassword = await hashPassword(password);
@@ -79,29 +79,56 @@ const register = async (
   phone,
 ) => {
   try {
-    const userE = await User.findOne({
-      user_name: userName,
+    const existingUser = await User.findOne({
+      $or: [
+        { user_name: userName.toLowerCase() },
+        { email: email },
+        { identity: identity },
+        { phone: phone },
+      ],
+    });
+
+    if (existingUser) {
+      // Return specific field that conflicts
+      if (existingUser.user_name === userName.toLowerCase()) {
+        throw new Error('USERNAME_EXISTS');
+      }
+      if (existingUser.email === email) {
+        throw new Error('EMAIL_EXISTS');
+      }
+      if (existingUser.identity === identity) {
+        throw new Error('IDENTITY_EXISTS');
+      }
+      if (existingUser.phone === phone) {
+        throw new Error('PHONE_EXISTS');
+      }
+    }
+
+    const user = new User({
+      user_name: userName.toLowerCase(),
+      full_name: full_name,
+      password: await hashPassword(password),
       email: email,
       identity: identity,
       phone: phone,
+      status: false,
+      role: 'user',
     });
-    if (userE === null) {
-      const user = new User({
-        user_name: userName.toLowerCase(),
-        full_name: full_name,
-        password: await hashPassword(password),
-        email: email,
-        identity: identity,
-        phone: phone,
-        status: false, // Ensure boolean false for inactive users
-        role: 'user',
-      });
-      await user.save(user);
-      return true;
-    }
+
+    const savedUser = await user.save();
+    return {
+      success: true,
+      user: {
+        id: savedUser._id,
+        userName: savedUser.user_name,
+        email: savedUser.email,
+      },
+    };
   } catch (error) {
-    console.error('Error in function:', error);
-    return false;
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in register:', error.message);
+    }
+    throw error;
   }
 };
 
@@ -205,23 +232,40 @@ const forgotPassword = async (email) => {
     user.passwordResetExpires = Date.now() + 1 * 60 * 60 * 1000;
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      service: 'gmail',
-      auth: {
-        user: process.env.MAIL_FROM,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
+    // Check if email credentials are configured
+    if (!process.env.MAIL_FROM || !process.env.MAIL_PASSWORD) {
+      console.warn('Email credentials not configured. Password reset email not sent.');
+      // Return success to client but don't send email
+      return { message: 'If the email exists, a reset link has been sent.' };
+    }
 
-    return await transporter.sendMail({
-      from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
-      to: email,
-      subject: 'Lấy lại mật khẩu Bidy',
-      text: ` Bạn nhận được email này vì chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. \n Hãy nhấn vào link bên dưới để đặt lại mật khẩu của bạn: \n ${process.env.CLIENT_URL}/reset-password?token=${token}&email=${email} \n Link sẽ hết hạn sau 1 giờ. \n Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.
-       `,
-    });
+    try {
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        service: 'gmail',
+        auth: {
+          user: process.env.MAIL_FROM,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
+
+      const result = await transporter.sendMail({
+        from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
+        to: email,
+        subject: 'Lấy lại mật khẩu Bidy',
+        text: ` Bạn nhận được email này vì chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. \n Hãy nhấn vào link bên dưới để đặt lại mật khẩu của bạn: \n ${process.env.CLIENT_URL}/reset-password?token=${token}&email=${email} \n Link sẽ hết hạn sau 1 giờ. \n Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.
+         `,
+      });
+
+      console.log(`Password reset email sent successfully to ${email}`);
+      return result;
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError.message);
+      // Don't throw here, just log the error and return success to client
+      // The token is still saved in the database for manual verification
+      return { message: 'Password reset request processed. If email is configured, a reset link has been sent.' };
+    }
   } catch (error) {
     // Log error for debugging but don't expose to client
     if (process.env.NODE_ENV === 'development') {
@@ -232,36 +276,62 @@ const forgotPassword = async (email) => {
 };
 
 const resetPassword = async (token, newPassword) => {
-  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-  const user = await User.findOne({
-    _id: decodedToken.id,
-    passwordResetToken: token,
-    passwordResetExpires: { $gt: Date.now() },
-  });
+    const user = await User.findOne({
+      _id: decodedToken.id,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    });
 
-  // Hash the new password before saving
-  user.password = await hashPassword(newPassword);
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
+    if (!user) {
+      throw new Error('Invalid or expired reset token');
+    }
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    service: 'gmail',
-    auth: {
-      user: process.env.MAIL_FROM,
-      pass: process.env.MAIL_PASSWORD,
-    },
-  });
+    // Hash the new password before saving
+    user.password = await hashPassword(newPassword);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
 
-  return await transporter.sendMail({
-    from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
-    to: user.email,
-    subject: 'Đã đặt lại mật khẩu Bidy ',
-    text: `Mật khẩu của bạn đã được đặt lại thành công. \nNếu bạn không phải là người thực hiện hãy liên hệ với chúng tôi ngay lập tức: bidviet.hotro@gmail.com. \nCảm ơn bạn đã sử dụng dịch vụ của chúng tôi.`,
-  });
+    // Check if email credentials are configured
+    if (!process.env.MAIL_FROM || !process.env.MAIL_PASSWORD) {
+      console.warn('Email credentials not configured. Password reset confirmation email not sent.');
+      return { message: 'Password reset successful' };
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        service: 'gmail',
+        auth: {
+          user: process.env.MAIL_FROM,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
+
+      const result = await transporter.sendMail({
+        from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
+        to: user.email,
+        subject: 'Đã đặt lại mật khẩu Bidy ',
+        text: `Mật khẩu của bạn đã được đặt lại thành công. \nNếu bạn không phải là người thực hiện hãy liên hệ với chúng tôi ngay lập tức: bidviet.hotro@gmail.com. \nCảm ơn bạn đã sử dụng dịch vụ của chúng tôi.`,
+      });
+
+      console.log(`Password reset confirmation email sent to ${user.email}`);
+      return result;
+    } catch (emailError) {
+      console.error('Failed to send password reset confirmation email:', emailError.message);
+      // Password was reset successfully, email failure shouldn't affect that
+      return { message: 'Password reset successful. Confirmation email could not be sent.' };
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in resetPassword:', error.message);
+    }
+    throw error;
+  }
 };
 
 const viewProfile = async (id) => {
@@ -306,27 +376,33 @@ const wishlist = async (user_id) => {
   }
 };
 
-const addWishlist = async (user_id, auction_id, res) => {
+const addWishlist = async (user_id, auction_id) => {
   try {
-    const isExist = await Wishlist.findOne({
+    const existingWishlist = await Wishlist.findOne({
       user_id,
       auction_id,
       status: 'true',
     });
-    if (isExist) {
-      throw new Error(transValidation.auction_exist_in_wishlist);
+
+    if (existingWishlist) {
+      throw new Error('AUCTION_ALREADY_IN_WISHLIST');
     }
-    return await Wishlist.create({
+
+    const wishlistItem = await Wishlist.create({
       user_id,
       auction_id,
       status: 'true',
     });
+
+    return {
+      success: true,
+      wishlistItem,
+    };
   } catch (error) {
-    res
-      .status(400)
-      .json(
-        response(responseStatus.fail, transValidation.auction_exist_in_wishlist),
-      );
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in addWishlist:', error.message);
+    }
+    throw error;
   }
 };
 
@@ -342,39 +418,59 @@ const removeAllWishlist = async (user_id) => {
 };
 
 const sendVerifyLink = async (email) => {
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-    expiresIn: '15m',
-  });
+  try {
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: '15m',
+    });
 
-  const verifyLink = `${process.env.SERVER_URL}/user/verify?token=${token}`;
-  const resendLink = `${
-    process.env.SERVER_URL
-  }/resend-verify?email=${encodeURIComponent(email)}`;
+    // Check if email credentials are configured
+    if (!process.env.MAIL_FROM || !process.env.MAIL_PASSWORD) {
+      console.warn('Email credentials not configured. Verification email not sent.');
+      // Still return token to allow registration to complete
+      return token;
+    }
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    service: 'gmail',
-    auth: {
-      user: process.env.MAIL_FROM,
-      pass: process.env.MAIL_PASSWORD,
-    },
-  });
+    const verifyLink = `${process.env.SERVER_URL}/user/verify?token=${token}`;
+    const resendLink = `${
+      process.env.SERVER_URL
+    }/resend-verify?email=${encodeURIComponent(email)}`;
 
-  await transporter.sendMail({
-    from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
-    to: email,
-    subject: 'Kích hoạt tài khoản Bidy ',
-    html: `
-      <p>Chào bạn,</p>
-      <p>Click vào liên kết dưới đây để kích hoạt tài khoản:</p>
-      <a href="${verifyLink}" target="_blank">${verifyLink}</a>
-      <p><strong>Lưu ý:</strong> liên kết hết hạn sau 15 phút.</p>
-      <p>Nếu hết hạn, <a href="${resendLink}" target="_blank">Gửi lại liên kết xác minh</a>.</p>
-    `,
-  });
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_FROM,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
 
-  return token;
+    await transporter.sendMail({
+      from: '"Bidy - Sàn đấu giá số 1 Việt Nam" <bidviet.hotro@gmail.com>',
+      to: email,
+      subject: 'Kích hoạt tài khoản Bidy ',
+      html: `
+        <p>Chào bạn,</p>
+        <p>Click vào liên kết dưới đây để kích hoạt tài khoản:</p>
+        <a href="${verifyLink}" target="_blank">${verifyLink}</a>
+        <p><strong>Lưu ý:</strong> liên kết hết hạn sau 15 phút.</p>
+        <p>Nếu hết hạn, <a href="${resendLink}" target="_blank">Gửi lại liên kết xác minh</a>.</p>
+      `,
+    });
+
+    console.log(`Verification email sent successfully to ${email}`);
+    return token;
+  } catch (error) {
+    console.error('Failed to send verification email:', error.message);
+
+    // Generate token anyway to allow registration to complete
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: '15m',
+    });
+
+    // Note: In production, you might want to queue this for retry
+    return token;
+  }
 };
 
 const getMonthlyUserStats = async (yearParam) => {

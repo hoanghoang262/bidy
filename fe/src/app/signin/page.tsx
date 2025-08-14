@@ -7,6 +7,11 @@ import { fetchProfile, useSignin } from "@/services/user";
 import { APP_ROUTES } from "@/constants/routes.constants";
 import { useDispatch } from "react-redux";
 import { setAuth } from "@/store/slices/authSlice";
+import { Eye, EyeOff } from "lucide-react";
+import AnimatedFormContainer from "@/components/ui/AnimatedFormContainer";
+import AnimatedButton from "@/components/ui/AnimatedButton";
+import AuthLayout from "@/components/ui/AuthLayout";
+import ResponsiveInput from "@/components/ui/ResponsiveInput";
 
 const DEFAULT_USER: LocalUser = {
   name: "Demo User",
@@ -27,6 +32,8 @@ const ADMIN_USER: LocalUser = {
 function SignInContent() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
   const { mutate: signin } = useSignin();
@@ -59,6 +66,8 @@ function SignInContent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
+    
     signin(
       { userName: form.username, password: form.password },
       {
@@ -70,103 +79,116 @@ function SignInContent() {
             redirect(APP_ROUTES.ADMIN);
           else redirect(APP_ROUTES.HOME);
         },
+        onError: () => {
+          setIsSubmitting(false);
+        },
+        onSettled: () => {
+          setIsSubmitting(false);
+        }
       }
     );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 pb-64 lg:pb-24">
-      <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8 border border-border">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-primary mb-2">ĐĂNG NHẬP</h1>
-          <p className="text-foreground">Chào Mừng Quay Trở Lại!</p>
-        </div>
-        {/* Demo credentials */}
-        {/* <div className="mb-4">
-          <div className="text-xs text-foreground mb-1">
-            Demo User: demo@email.com / 123456
-          </div>
-          <div className="text-xs text-foreground mb-1">
-            Admin User: admin@email.com / admin123
-          </div>
-        </div> */}
+    <AuthLayout 
+      title="ĐĂNG NHẬP" 
+      subtitle="Chào Mừng Quay Trở Lại!"
+    >
+      <AnimatedFormContainer>
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+          <ResponsiveInput
+            label="Tên đăng nhập"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            placeholder="Nhập tên đăng nhập"
+            autoComplete="username"
+            disabled={isSubmitting}
+            required
+          />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Tên đăng nhập <span className="text-red-500">*</span>
+          <div className="space-y-3">
+            <label className="block font-semibold text-foreground text-base leading-tight">
+              Mật Khẩu <span className="text-primary">*</span>
             </label>
-            <input
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              placeholder="Nhập tên đăng nhập"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-foreground placeholder:text-foreground-secondary focus:outline-none focus:ring-2 focus:ring-red-500"
-              autoComplete="username"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Mật Khẩu <span className="text-red-500">*</span>
-            </label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-foreground placeholder:text-foreground-secondary focus:outline-none focus:ring-2 focus:ring-red-500"
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Nhập mật khẩu"
+                className="w-full px-4 py-3 pr-12 min-h-[44px] border border-border rounded-lg bg-background text-foreground placeholder:text-foreground-secondary text-base leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                autoComplete="current-password"
+                disabled={isSubmitting}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-foreground-secondary hover:text-foreground transition-colors disabled:opacity-50 min-w-[20px] min-h-[20px]"
+                tabIndex={-1}
+                disabled={isSubmitting}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          <button
+          <AnimatedButton
             type="submit"
-            className="cursor-pointer w-full bg-red-600 text-white rounded-lg py-3 font-semibold hover:bg-red-700 transition-colors"
+            disabled={isSubmitting || !form.username || !form.password}
+            isLoading={isSubmitting}
+            loadingText="Đang đăng nhập..."
+            className="w-full mt-6"
+            size="lg"
           >
             Đăng Nhập
-          </button>
+          </AnimatedButton>
+
+          <div className="space-y-5 pt-6 border-t border-border text-center">
+            <Link
+              href="/forgot-password"
+              className="inline-block text-primary hover:underline hover:text-primary/80 transition-colors text-base min-h-[44px] flex items-center justify-center px-4 py-2 rounded-lg hover:bg-primary/5"
+            >
+              Quên mật khẩu?
+            </Link>
+
+            <div className="text-foreground-secondary text-base leading-relaxed">
+              Chưa có tài khoản?{" "}
+              <Link
+                href={APP_ROUTES.SIGN_UP}
+                className="font-semibold text-primary hover:underline hover:text-primary/80 transition-colors inline-block min-h-[32px] px-2 py-1 rounded"
+              >
+                Đăng ký
+              </Link>
+            </div>
+          </div>
         </form>
-
-        <div className="text-center text-foreground-secondary text-sm mt-4">
-          <Link
-            href="/forgot-password"
-            className="text-red-600 hover:underline"
-          >
-            Quên mật khẩu?
-          </Link>
-        </div>
-
-        <div className="text-center text-foreground-secondary text-sm mt-2">
-          Chưa có tài khoản?{" "}
-          <Link
-            href={APP_ROUTES.SIGN_UP}
-            className="text-red-600 hover:underline"
-          >
-            Đăng ký
-          </Link>
-        </div>
-      </div>
-    </div>
+      </AnimatedFormContainer>
+    </AuthLayout>
   );
 }
 
-// Removed unused SignInFallback component
-
 // Loading fallback for signin page
 const SignInLoading = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background px-4">
-    <div className="w-full max-w-md bg-card rounded-lg shadow-lg p-8 border border-border">
-      <div className="text-center mb-6">
-        <div className="h-8 bg-muted rounded w-48 mx-auto mb-2 animate-pulse"></div>
-        <div className="h-4 bg-muted rounded w-32 mx-auto animate-pulse"></div>
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-accent-foreground to-background px-4">
+    <div className="w-full max-w-md bg-card rounded-2xl shadow-xl p-8 border border-border">
+      <div className="text-center mb-8">
+        <div className="h-9 bg-muted rounded w-48 mx-auto mb-2 animate-pulse"></div>
+        <div className="h-5 bg-muted rounded w-32 mx-auto animate-pulse"></div>
       </div>
-      <div className="space-y-4">
-        <div className="h-10 bg-muted rounded animate-pulse"></div>
-        <div className="h-10 bg-muted rounded animate-pulse"></div>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-5 bg-muted rounded w-32 animate-pulse"></div>
+          <div className="h-12 bg-muted rounded animate-pulse"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-5 bg-muted rounded w-24 animate-pulse"></div>
+          <div className="h-12 bg-muted rounded animate-pulse"></div>
+        </div>
         <div className="h-12 bg-muted rounded animate-pulse"></div>
       </div>
     </div>

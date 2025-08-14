@@ -45,23 +45,23 @@ const hashPassword = async (password) => {
 // Fix status field inconsistencies
 const fixStatusFields = async () => {
   console.log('🔧 Fixing status field inconsistencies...');
-  
+
   try {
     // Find all users with string status values
     const usersWithStringStatus = await User.find({
-      status: { $type: 'string' }
+      status: { $type: 'string' },
     });
-    
+
     console.log(`Found ${usersWithStringStatus.length} users with string status`);
-    
+
     for (const user of usersWithStringStatus) {
       const booleanStatus = user.status === 'true';
       await User.findByIdAndUpdate(user._id, {
-        status: booleanStatus
+        status: booleanStatus,
       });
       console.log(`  ✓ Updated user ${user.user_name}: "${user.status}" → ${booleanStatus}`);
     }
-    
+
     console.log('✅ Status field cleanup completed');
   } catch (error) {
     console.error('❌ Error fixing status fields:', error.message);
@@ -72,23 +72,23 @@ const fixStatusFields = async () => {
 // Fix password hashing
 const fixPasswordHashing = async () => {
   console.log('🔧 Fixing password hashing...');
-  
+
   try {
     // Find all users with plain text passwords (not starting with $2)
     const usersWithPlainPasswords = await User.find({
-      password: { $not: /^\$2[aby]?\$/ }
+      password: { $not: /^\$2[aby]?\$/ },
     });
-    
+
     console.log(`Found ${usersWithPlainPasswords.length} users with plain text passwords`);
-    
+
     for (const user of usersWithPlainPasswords) {
       const hashedPassword = await hashPassword(user.password);
       await User.findByIdAndUpdate(user._id, {
-        password: hashedPassword
+        password: hashedPassword,
       });
       console.log(`  ✓ Hashed password for user ${user.user_name}`);
     }
-    
+
     console.log('✅ Password hashing cleanup completed');
   } catch (error) {
     console.error('❌ Error fixing password hashing:', error.message);
@@ -99,43 +99,43 @@ const fixPasswordHashing = async () => {
 // Validate data integrity after fixes
 const validateDataIntegrity = async () => {
   console.log('🔍 Validating data integrity...');
-  
+
   try {
     // Check for any remaining string status values
     const stringStatusCount = await User.countDocuments({
-      status: { $type: 'string' }
+      status: { $type: 'string' },
     });
-    
+
     // Check for any remaining plain text passwords
     const plainPasswordCount = await User.countDocuments({
-      password: { $not: /^\$2[aby]?\$/ }
+      password: { $not: /^\$2[aby]?\$/ },
     });
-    
+
     // Check for required field completeness
     const incompleteUsers = await User.find({
       $or: [
         { user_name: { $exists: false } },
         { email: { $exists: false } },
         { password: { $exists: false } },
-        { status: { $exists: false } }
-      ]
+        { status: { $exists: false } },
+      ],
     });
-    
+
     console.log('📊 Data integrity report:');
     console.log(`  Users with string status: ${stringStatusCount}`);
     console.log(`  Users with plain passwords: ${plainPasswordCount}`);
     console.log(`  Incomplete user records: ${incompleteUsers.length}`);
-    
+
     if (stringStatusCount === 0 && plainPasswordCount === 0) {
       console.log('✅ All authentication data integrity checks passed');
     } else {
       console.warn('⚠️  Some data integrity issues remain');
     }
-    
+
     return {
       stringStatusCount,
       plainPasswordCount,
-      incompleteUsersCount: incompleteUsers.length
+      incompleteUsersCount: incompleteUsers.length,
     };
   } catch (error) {
     console.error('❌ Error validating data integrity:', error.message);
@@ -146,27 +146,27 @@ const validateDataIntegrity = async () => {
 // Generate data consistency report
 const generateReport = async () => {
   console.log('📋 Generating database report...');
-  
+
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ status: true });
     const inactiveUsers = await User.countDocuments({ status: false });
-    
+
     // Check user roles
     const adminUsers = await User.countDocuments({ role: 'admin' });
     const regularUsers = await User.countDocuments({ role: 'user' });
-    
+
     // Check for duplicates
     const duplicateUsernames = await User.aggregate([
       { $group: { _id: '$user_name', count: { $sum: 1 } } },
-      { $match: { count: { $gt: 1 } } }
+      { $match: { count: { $gt: 1 } } },
     ]);
-    
+
     const duplicateEmails = await User.aggregate([
       { $group: { _id: '$email', count: { $sum: 1 } } },
-      { $match: { count: { $gt: 1 } } }
+      { $match: { count: { $gt: 1 } } },
     ]);
-    
+
     console.log('📊 Database Summary Report:');
     console.log(`  Total users: ${totalUsers}`);
     console.log(`  Active users: ${activeUsers}`);
@@ -175,11 +175,11 @@ const generateReport = async () => {
     console.log(`  Regular users: ${regularUsers}`);
     console.log(`  Duplicate usernames: ${duplicateUsernames.length}`);
     console.log(`  Duplicate emails: ${duplicateEmails.length}`);
-    
+
     if (duplicateUsernames.length > 0) {
       console.warn('⚠️  Duplicate usernames found:', duplicateUsernames.map(d => d._id));
     }
-    
+
     if (duplicateEmails.length > 0) {
       console.warn('⚠️  Duplicate emails found:', duplicateEmails.map(d => d._id));
     }
@@ -192,26 +192,26 @@ const generateReport = async () => {
 // Main execution function
 const main = async () => {
   console.log('🚀 Starting authentication database cleanup...\n');
-  
+
   try {
     await connectDB();
-    
+
     // Step 1: Fix status field inconsistencies
     await fixStatusFields();
     console.log('');
-    
+
     // Step 2: Fix password hashing
     await fixPasswordHashing();
     console.log('');
-    
+
     // Step 3: Validate data integrity
     const integrity = await validateDataIntegrity();
     console.log('');
-    
+
     // Step 4: Generate report
     await generateReport();
     console.log('');
-    
+
     if (integrity.stringStatusCount === 0 && integrity.plainPasswordCount === 0) {
       console.log('🎉 Database cleanup completed successfully!');
       console.log('   All status fields are now boolean');
@@ -219,7 +219,7 @@ const main = async () => {
     } else {
       console.warn('⚠️  Cleanup completed with some remaining issues');
     }
-    
+
   } catch (error) {
     console.error('💥 Cleanup failed:', error.message);
     process.exit(1);
@@ -238,5 +238,5 @@ module.exports = {
   fixStatusFields,
   fixPasswordHashing,
   validateDataIntegrity,
-  generateReport
+  generateReport,
 };

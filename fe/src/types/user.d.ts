@@ -1,7 +1,7 @@
 export interface BodyRegisterRequest {
   userName: string;
   password: string;
-  full_name: string;
+  fullName: string; // Backend expects 'fullName', not 'full_name'
   email: string;
   identity: string;
   phone: string;

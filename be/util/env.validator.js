@@ -35,6 +35,8 @@ const ENV_CONFIG = {
     'LIMIT_NUMBER',
     'ADMIN_LIMIT_NUMBER',
     'ID_ADMIN',
+    'MAIL_FROM',
+    'MAIL_PASSWORD',
   ],
 };
 
@@ -94,6 +96,8 @@ const validationRules = {
   'ACCESS_KEY_ID': validators.string,
   'SECRET_ACCESS_KEY': validators.string,
   'ID_ADMIN': validators.string,
+  'MAIL_FROM': validators.string,
+  'MAIL_PASSWORD': validators.string,
 };
 
 /**

@@ -18,22 +18,23 @@ import {
   signin,
   updateUser,
 } from "@/services/user/user.fetcher";
-import { handleErrorMessage } from "@/utils/error.utils";
+import { handleErrorMessage, handleSuccessMessage } from "@/utils/error.utils";
 import logger from "@/utils/logger";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export const useRegister = () => {
+  const router = useRouter();
+  
   return useMutation({
     mutationFn: register,
     onError: (error) => handleErrorMessage(error),
     onSuccess(data) {
-      toast.success(
-        data?.message ??
-          "Register successfully! Check your email for verifying your account."
-      );
-      redirect(APP_ROUTES.SIGN_IN);
+      const successMessage = data?.message ?? 
+        "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.";
+      handleSuccessMessage(successMessage);
+      router.push(APP_ROUTES.SIGN_IN);
     },
   });
 };
@@ -43,7 +44,8 @@ export const useSignin = () => {
     mutationFn: signin,
     onError: (error) => handleErrorMessage(error),
     onSuccess: async (data) => {
-      toast.success(data?.message ?? "Sign in successfully!");
+      const successMessage = data?.message ?? "Đăng nhập thành công!";
+      handleSuccessMessage(successMessage);
       setAppCookie(APP_CONSTANTS.AUTH_COOKIE_NAME, data?.data.token ?? "");
       logger.debug('User signed in successfully', { userId: data?.data?.user?.id });
       setAppCookie(
@@ -88,7 +90,8 @@ export const useUpdateUser = () => {
     mutationFn: updateUser,
     onError: (error) => handleErrorMessage(error),
     onSuccess: (data) => {
-      toast.success(data?.message ?? "Profile updated successfully!");
+      const successMessage = data?.message ?? "Cập nhật thông tin thành công!";
+      handleSuccessMessage(successMessage);
     },
   });
 };
@@ -100,7 +103,8 @@ export const useChangePassword = () => {
     mutationFn: changePassword,
     onError: (error) => handleErrorMessage(error),
     onSuccess: (data) => {
-      toast.success(data?.message ?? "Password changed successfully!");
+      const successMessage = data?.message ?? "Đổi mật khẩu thành công!";
+      handleSuccessMessage(successMessage);
       logout(pathname);
     },
   });
@@ -110,8 +114,10 @@ export const useForgotPassword = () => {
   return useMutation({
     mutationFn: forgotPassword,
     onError: (error) => handleErrorMessage(error),
-    onSuccess: () => {
-      toast.success("Check your email for a reset link!");
+    onSuccess: (data) => {
+      const successMessage = data?.message ?? 
+        "Vui lòng kiểm tra email để nhận liên kết đặt lại mật khẩu!";
+      handleSuccessMessage(successMessage);
     },
   });
 };
@@ -121,7 +127,8 @@ export const useResetPassword = () => {
     mutationFn: resetPassword,
     onError: (error) => handleErrorMessage(error),
     onSuccess: (data) => {
-      toast.success(data?.message ?? "Password reset successfully!");
+      const successMessage = data?.message ?? "Đặt lại mật khẩu thành công!";
+      handleSuccessMessage(successMessage);
     },
   });
 };

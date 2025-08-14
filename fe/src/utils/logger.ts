@@ -51,20 +51,34 @@ class FrontendLogger {
   private getLogLevel(): number {
     if (typeof window === 'undefined') return this.logLevels.INFO;
     
-    const envLevel = process.env.NEXT_PUBLIC_LOG_LEVEL || 'INFO';
-    const level = this.logLevels[envLevel.toUpperCase()];
-    return level !== undefined ? level : this.logLevels.INFO;
+    try {
+      const envLevel = process.env.NEXT_PUBLIC_LOG_LEVEL || 'INFO';
+      const level = this.logLevels[envLevel.toUpperCase()];
+      return level !== undefined ? level : this.logLevels.INFO;
+    } catch {
+      return this.logLevels.INFO;
+    }
   }
 
   private getStorageEnabled(): boolean {
     if (typeof window === 'undefined') return false;
-    return process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true' || process.env.NODE_ENV === 'development';
+    
+    try {
+      return process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true' || process.env.NODE_ENV === 'development';
+    } catch {
+      return false;
+    }
   }
 
   private formatMessage(level: string, message: string): string {
     const timestamp = new Date().toISOString();
     
-    if (process.env.NODE_ENV === 'production') {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        return `[${timestamp}] [${level}] ${message}`;
+      }
+    } catch {
+      // Fallback if NODE_ENV is not accessible
       return `[${timestamp}] [${level}] ${message}`;
     }
 
@@ -166,17 +180,22 @@ class FrontendLogger {
     const consoleMethod = this.getConsoleMethod(level);
 
     // Console output
-    if (process.env.NODE_ENV === 'development') {
-      const colors = {
-        ERROR: 'color: #ff4444; font-weight: bold;',
-        WARN: 'color: #ffaa00; font-weight: bold;',
-        INFO: 'color: #0088ff; font-weight: bold;',
-        DEBUG: 'color: #888888;'
-      };
-      
-      const style = colors[level as keyof typeof colors] || '';
-      consoleMethod(formattedMessage, style, 'color: inherit;', meta);
-    } else {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        const colors = {
+          ERROR: 'color: #ff4444; font-weight: bold;',
+          WARN: 'color: #ffaa00; font-weight: bold;',
+          INFO: 'color: #0088ff; font-weight: bold;',
+          DEBUG: 'color: #888888;'
+        };
+        
+        const style = colors[level as keyof typeof colors] || '';
+        consoleMethod(formattedMessage, style, 'color: inherit;', meta);
+      } else {
+        consoleMethod(formattedMessage, meta);
+      }
+    } catch {
+      // Fallback to simple console output if environment check fails
       consoleMethod(formattedMessage, meta);
     }
 

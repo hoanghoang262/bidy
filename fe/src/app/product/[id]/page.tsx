@@ -76,6 +76,13 @@ export default function Page({
     notFound();
   }
 
+  // Calculate current price from highest bid or starting price
+  const highestBid = apiProduct.top_ownerships && apiProduct.top_ownerships.length > 0 
+    ? Math.max(...apiProduct.top_ownerships.map((bid: TopOwnership) => bid.amount || 0))
+    : null;
+  
+  const currentPriceValue = highestBid || parseFloat(apiProduct.price || "0");
+
   // Map backend data to frontend format - only use fields that exist in backend
   const product = {
     id: apiProduct._id || apiProduct.id || 0,
@@ -84,8 +91,8 @@ export default function Page({
     description: apiProduct.description || "",
     startingPrice: apiProduct.price?.toString() || "0",
     buyNow: apiProduct.priceBuyNow?.toString() || undefined,
-    currentPrice: apiProduct.price?.toString() || undefined,
-    finalPrice: apiProduct.price?.toString() || undefined,
+    currentPrice: currentPriceValue.toString() || undefined,
+    finalPrice: currentPriceValue.toString() || undefined,
     timeLeft: apiProduct.time_remain || undefined,
     endTime: apiProduct.finishedTime || undefined,
     category: apiProduct.category || undefined,
@@ -99,7 +106,7 @@ export default function Page({
   const images = mapImageUrls(product.image);
 
   // Calculate current price from product data
-  const currentPrice = parseInt(product.currentPrice?.replace(/\D/g, "") || "0");
+  const currentPrice = currentPriceValue;
 
   // Backend doesn't provide owner/seller information, so we skip seller display
 
@@ -167,6 +174,7 @@ export default function Page({
                 currentUser={currentUser}
                 currentUserId={currentUser?._id || ""}
                 productName={product.name}
+                buyNowPrice={parseFloat(product.buyNow || "0")}
               />
             )}
             {product.type === STATUS_AUCTIONS.ENDED && (

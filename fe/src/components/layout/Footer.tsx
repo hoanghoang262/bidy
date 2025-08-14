@@ -43,6 +43,7 @@ export default function Footer() {
     pathname.startsWith("/admin") || (pathname === "/notification" && isAdmin);
 
   const isMessagesPage = pathname === "/profile/messages";
+  const isAuthPage = ['/signin', '/signup', '/forgot-password', '/reset-password'].includes(pathname);
   const [logo, setLogo] = useState("/logo-light@3x.webp");
   useEffect(
     () =>
@@ -57,11 +58,12 @@ export default function Footer() {
     !isAdminPage &&
     !isMessagesPage && (
       <footer className="bg-muted shadow-[0_-1px_4px_rgba(155,155,155,0.25)] pt-10 pb-4 px-4 flex flex-col gap-6 lg:pt-0 lg:pb-0 lg:px-0 lg:gap-0">
-        {/* CTA Card / CTA Bar */}
-        <div
-          className="bg-accent rounded-2xl p-6 flex flex-col gap-8 mt-[-240px] lg:mt-[8px] max-w-[88vw] mx-auto shadow-lg
-        lg:rounded-[20px] lg:shadow-lg lg:w-[1280px] lg:h-fit lg:py-8 lg:flex-row lg:items-center lg:justify-between lg:p-0 lg:gap-2 lg:relative lg:top-[-88px]"
-        >
+        {/* CTA Card / CTA Bar - Hidden on auth pages */}
+        {!isAuthPage && (
+          <div
+            className="bg-accent rounded-2xl p-6 flex flex-col gap-8 mt-[-240px] lg:mt-[8px] max-w-[88vw] mx-auto shadow-lg
+          lg:rounded-[20px] lg:shadow-lg lg:w-[1280px] lg:h-fit lg:py-8 lg:flex-row lg:items-center lg:justify-between lg:p-0 lg:gap-2 lg:relative lg:top-[-88px]"
+          >
           {/* Desktop: 3 CTAs in a row, Mobile: stacked */}
           <div className="flex flex-col gap-8 w-full lg:flex-row lg:gap-8 lg:justify-between lg:px-20 lg:py-0 lg:max-w-[1120px] lg:mx-auto">
             {/* Signup CTA */}
@@ -93,6 +95,7 @@ export default function Footer() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Main Links/Info Section */}
         <div className="flex flex-col-reverse gap-8 items-center mt-8 w-full lg:mt-0 lg:flex-row lg:items-start lg:justify-center lg:gap-[75px] lg:w-full lg:px-0 lg:py-8 lg:h-fit">

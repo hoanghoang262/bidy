@@ -22,6 +22,7 @@ interface ProductCTAProps {
   topOwnerships?: TopOwnership[];
   currentUser?: User | null;
   currentUserId?: string;
+  buyNowPrice?: number;
 }
 
 export default function ProductCTA({
@@ -33,6 +34,7 @@ export default function ProductCTA({
   currentUser,
   productName,
   currentUserId,
+  buyNowPrice = 0,
 }: ProductCTAProps & { productName?: string }) {
   const [bidInput, setBidInput] = useState("");
   const [bidError, setBidError] = useState("");
@@ -143,6 +145,15 @@ export default function ProductCTA({
       );
       return;
     }
+    
+    // Check if bid exceeds buy now price
+    if (buyNowPrice > 0 && bidAmount >= buyNowPrice) {
+      setBidError(
+        `Bid không được bằng hoặc vượt quá giá mua ngay ${buyNowPrice.toLocaleString("vi-VN")} VNĐ`
+      );
+      return;
+    }
+    
     setBidError("");
     if (productId) {
       fetchBid(productId.toString(), bidAmount)
